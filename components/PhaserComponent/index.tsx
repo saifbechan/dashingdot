@@ -19,6 +19,10 @@ const PhaserComponent = () => {
         height: window.innerHeight,
         physics: {
           default: 'arcade',
+          arcade: {
+            gravity: { y: 300 },
+            debug: true,
+          },
         },
         scene: Scene,
       });

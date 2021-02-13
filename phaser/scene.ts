@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 
 export default class Scene extends Phaser.Scene {
-  private ball: Phaser.GameObjects.Sprite | undefined;
+  private platforms: Phaser.Physics.Arcade.StaticGroup | undefined;
+  private ball: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody | undefined;
 
   constructor() {
     super('PlayGame');
@@ -9,20 +10,24 @@ export default class Scene extends Phaser.Scene {
 
   preload = (): void => {
     this.load.image('ball', 'https://i.imgur.com/8RJgZAm.png');
+    this.load.image('platform', 'https://i.imgur.com/IBO15YD.png');
   };
 
   create = (): void => {
-    this.ball = this.add.sprite(50, 50, 'ball');
+    this.ball = this.physics.add.sprite(50, 50, 'ball');
+    this.ball.setBounce(0);
+    this.ball.setCollideWorldBounds(true);
 
-    this.physics.world.enableBody(this.ball);
+    this.platforms = this.physics.add.staticGroup() as Phaser.Physics.Arcade.StaticGroup;
+    this.platforms.create(400, 568, 'platform').setScale(2).refreshBody();
 
-    this.ball.body.velocity.x = 100;
-    this.ball.body.velocity.y = 100;
+    this.physics.add.collider(this.ball, this.platforms);
 
-    if (!(this.ball.body instanceof Phaser.Physics.Arcade.Body)) return;
-
-    this.ball.body.collideWorldBounds = true;
-    this.ball.body.bounce.set(1);
+    this.input.keyboard.on('keydown-SPACE', () => {
+      if (this.ball?.body.touching.down) {
+        this.ball?.setVelocityY(-300);
+      }
+    });
   };
 
   update = (): void => {
