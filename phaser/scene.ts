@@ -14,11 +14,22 @@ export default class Scene extends Phaser.Scene {
   }
 
   preload = (): void => {
-    this.load.image('player', 'https://i.imgur.com/8RJgZAm.png');
-    this.load.image('platform', 'https://i.imgur.com/IBO15YD.png');
+    this.load.image('back', 'images/backgrounds/purple/back.png');
+    this.load.image('front', 'images/backgrounds/purple/front.png');
+    this.load.image('platform', 'images/platforms/tile-purple.png');
+    this.load.spritesheet('player', 'images/players/punk.png', {
+      frameWidth: 59,
+      frameHeight: 61,
+    });
   };
 
   create = (): void => {
+    const width = this.scale.width;
+    const height = this.scale.height;
+
+    this.add.image(width * 0.5, height * 0.5, 'back').setScrollFactor(0);
+    this.add.image(width * 0.5, height * 0.5, 'front').setScrollFactor(0.25);
+
     this.platformGroup = this.add.group({
       removeCallback: (platform: any) => {
         platform.scene.platformPool.add(platform);
@@ -35,8 +46,14 @@ export default class Scene extends Phaser.Scene {
 
     this.addPlatform(window.innerWidth, window.innerHeight / 2);
 
-    this.player = this.physics.add.sprite(50, 50, 'player');
+    this.player = this.physics.add.sprite(50, 200, 'player');
     this.player.setGravityY(config.playerGravity);
+    this.anims.create({
+      key: 'walk',
+      frames: this.anims.generateFrameNumbers('player', { start: 0, end: 7 }),
+      frameRate: 32,
+      repeat: -1,
+    });
 
     this.physics.add.collider(this.player, this.platformGroup);
 
@@ -45,6 +62,12 @@ export default class Scene extends Phaser.Scene {
 
   update = (): void => {
     if (!this.player || !this.platformGroup) return;
+
+    if (this.player.body.touching.down) {
+      this.player.anims.play('walk', true);
+    } else {
+      this.player.anims.stop();
+    }
 
     if (this.player.y > window.innerHeight) {
       this.scene.start('PlayGame');
@@ -83,7 +106,10 @@ export default class Scene extends Phaser.Scene {
       platform.visible = true;
       this.platformPool.remove(platform);
     } else {
-      platform = this.physics.add.sprite(posX, window.innerHeight * 0.8, 'platform');
+      platform = this.physics.add
+        .sprite(posX, window.innerHeight * 0.8, 'platform')
+        .setScale(0.5)
+        .refreshBody();
       platform.setImmovable(true);
       platform.setVelocityX(config.platformStartSpeed * -1);
       this.platformGroup.add(platform);
