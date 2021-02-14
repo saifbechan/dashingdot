@@ -18,8 +18,8 @@ export default class Scene extends Phaser.Scene {
     this.load.image('front', 'images/backgrounds/purple/front.png');
     this.load.image('platform', 'images/platforms/tile-purple.png');
     this.load.spritesheet('player', 'images/players/punk.png', {
-      frameWidth: 59,
-      frameHeight: 61,
+      frameWidth: 75,
+      frameHeight: 75,
     });
   };
 
@@ -46,12 +46,21 @@ export default class Scene extends Phaser.Scene {
 
     this.addPlatform(window.innerWidth, window.innerHeight / 2);
 
-    this.player = this.physics.add.sprite(50, 200, 'player');
+    this.player = this.physics.add.sprite(50, window.innerHeight / 2, 'player');
+    this.player.setSize(50, 58);
     this.player.setGravityY(config.playerGravity);
-    this.anims.create({
+
+    this.player.anims.create({
       key: 'walk',
-      frames: this.anims.generateFrameNumbers('player', { start: 0, end: 7 }),
-      frameRate: 32,
+      frames: this.anims.generateFrameNumbers('player', { frames: [0, 1, 2, 1, 3, 4, 5, 4] }),
+      frameRate: 16,
+      repeat: -1,
+    });
+
+    this.player.anims.create({
+      key: 'fly',
+      frames: this.anims.generateFrameNumbers('player', { frames: [0, 6, 0, 7] }),
+      frameRate: 16,
       repeat: -1,
     });
 
@@ -66,7 +75,7 @@ export default class Scene extends Phaser.Scene {
     if (this.player.body.touching.down) {
       this.player.anims.play('walk', true);
     } else {
-      this.player.anims.stop();
+      this.player.anims.play('fly', true);
     }
 
     if (this.player.y > window.innerHeight) {
