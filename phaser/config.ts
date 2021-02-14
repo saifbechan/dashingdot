@@ -1,7 +1,7 @@
 const config = {
   platformStartSpeed: 350,
-  spawnRange: [100, 350],
-  platformSizeRange: [50, 250],
+  spawnRange: [150, 350],
+  platformSizeRange: [150, 300],
   playerGravity: 900,
   jumpForce: 400,
   playerStartPosition: 200,
