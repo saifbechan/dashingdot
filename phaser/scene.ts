@@ -1,7 +1,12 @@
+import * as tf from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 
 import Player from './Entities/Player';
 import PlatformManager from './World/PlatformManager';
+
+export type PlayGameSceneType = Phaser.Scene & {
+  platformManager: PlatformManager;
+};
 
 export default class Scene extends Phaser.Scene {
   private platformManager!: PlatformManager;
@@ -11,6 +16,8 @@ export default class Scene extends Phaser.Scene {
   }
 
   create = (): void => {
+    tf.setBackend('cpu').then(() => console.log('Running TF on the CPU'));
+
     const width = this.scale.width;
     const height = this.scale.height;
 

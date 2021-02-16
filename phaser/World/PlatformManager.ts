@@ -39,8 +39,6 @@ export default class PlatformManager {
   update(): void {
     let minDistance = window.innerWidth;
     this.group.getChildren().forEach((platform: any) => {
-      if (!this.group) return;
-
       const platformDistance = window.innerWidth - platform.x - platform.displayWidth / 2;
       minDistance = Math.min(minDistance, platformDistance);
       if (platform.x < -platform.displayWidth / 2) {
