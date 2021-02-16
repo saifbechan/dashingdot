@@ -32,6 +32,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     return this;
   }
+
   preUpdate(time: number, delta: number): void {
     super.preUpdate(time, delta);
     if (this.body.touching.down) {
