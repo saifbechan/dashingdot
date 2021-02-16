@@ -5,7 +5,9 @@ import config from '../config';
 import { PlayGameSceneType } from '../scene';
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
+  private alive = true;
   private brain: tf.Sequential;
+
   private score = 0;
   private jumps = 0;
 
@@ -64,9 +66,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       this.anims.play('fly', true);
     }
 
-    if (this.y > window.innerHeight) {
-      console.log(this.score);
-      this.scene.scene.start('PlayGame');
+    if (this.y > window.innerHeight - 50) {
+      this.alive = false;
     }
     this.x = config.playerStartPosition;
   }
@@ -97,5 +98,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       this.setVelocityY(config.jumpForce * -1);
       this.jumps++;
     }
+  }
+
+  isAlive = (): boolean => this.alive;
+
+  setTransparency(numberOfPlayers: number): void {
+    this.alpha = 1 / numberOfPlayers;
   }
 }

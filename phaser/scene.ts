@@ -1,14 +1,15 @@
 import * as tf from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 
-import Player from './Entities/Player';
 import PlatformManager from './World/PlatformManager';
+import PlayerManager from './World/PlayerManager';
 
 export type PlayGameSceneType = Phaser.Scene & {
   platformManager: PlatformManager;
 };
 
 export default class Scene extends Phaser.Scene {
+  private playerManager!: PlayerManager;
   private platformManager!: PlatformManager;
 
   constructor() {
@@ -24,13 +25,19 @@ export default class Scene extends Phaser.Scene {
     this.add.image(width * 0.5, height * 0.5, 'back').setScrollFactor(0);
     this.add.image(width * 0.5, height * 0.5, 'front').setScrollFactor(0.25);
 
+    this.playerManager = new PlayerManager(this, 5);
     this.platformManager = new PlatformManager(this);
-    const player = this.physics.add.existing(new Player(this, 50, window.innerHeight / 2));
-    this.physics.add.collider(player, this.platformManager.getGroup());
+
+    this.physics.add.collider(this.playerManager, this.platformManager.getGroup());
   };
 
   update = (): void => {
     this.platformManager.update();
+    this.playerManager.update();
+
+    if (this.playerManager.countActive() === 0) {
+      this.scene.start('PlayGame');
+    }
   };
 
   preload = (): void => {
