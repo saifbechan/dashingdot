@@ -3,6 +3,8 @@ import Phaser from 'phaser';
 import config from '../config';
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
+  private score = 0;
+
   private jumps = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
@@ -35,13 +37,16 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   preUpdate(time: number, delta: number): void {
     super.preUpdate(time, delta);
+
     if (this.body.touching.down) {
       this.anims.play('walk', true);
+      this.score += 1;
     } else {
       this.anims.play('fly', true);
     }
 
     if (this.y > window.innerHeight) {
+      console.log(this.score);
       this.scene.scene.start('PlayGame');
     }
     this.x = config.playerStartPosition;

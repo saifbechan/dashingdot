@@ -10,16 +10,6 @@ export default class Scene extends Phaser.Scene {
     super('PlayGame');
   }
 
-  preload = (): void => {
-    this.load.image('back', 'images/backgrounds/purple/back.png');
-    this.load.image('front', 'images/backgrounds/purple/front.png');
-    this.load.image('platform', 'images/platforms/tile-purple.png');
-    this.load.spritesheet('player', 'images/players/punk.png', {
-      frameWidth: 75,
-      frameHeight: 75,
-    });
-  };
-
   create = (): void => {
     const width = this.scale.width;
     const height = this.scale.height;
@@ -34,5 +24,15 @@ export default class Scene extends Phaser.Scene {
 
   update = (): void => {
     this.platformManager.update();
+  };
+
+  preload = (): void => {
+    this.load.image('back', 'images/backgrounds/purple/back.png');
+    this.load.image('front', 'images/backgrounds/purple/front.png');
+    this.load.image('platform', 'images/platforms/tile-purple.png');
+    this.load.spritesheet('player', 'images/players/punk.png', {
+      frameWidth: 75,
+      frameHeight: 75,
+    });
   };
 }

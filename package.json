@@ -21,7 +21,7 @@
     "clean": "rimraf out .next"
   },
   "dependencies": {
-    "next": "10.0.6",
+    "next": "10.0.7",
     "phaser": "^3.52.0",
     "react": "17.0.1",
     "react-dom": "17.0.1"
@@ -36,7 +36,7 @@
     "@typescript-eslint/eslint-plugin": "^4.15.1",
     "@typescript-eslint/parser": "^4.15.1",
     "babel-jest": "^26.6.3",
-    "cypress": "^6.4.0",
+    "cypress": "^6.5.0",
     "eslint": "^7.20.0",
     "eslint-config-prettier": "^7.2.0",
     "eslint-loader": "^4.0.2",
