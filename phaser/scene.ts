@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 
+import Player from './Entities/Player';
 import config from './config';
 
 export default class Scene extends Phaser.Scene {
-  private player: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody | undefined;
   private platformGroup: Phaser.GameObjects.Group | undefined;
   private platformPool: Phaser.GameObjects.Group | undefined;
-  private playerJumps = 0;
+
   private nextPlatformDistance = 0;
 
   constructor() {
@@ -42,46 +42,15 @@ export default class Scene extends Phaser.Scene {
       },
     });
 
-    this.playerJumps = 0;
-
     this.addPlatform(window.innerWidth, window.innerHeight / 2);
 
-    this.player = this.physics.add.sprite(50, window.innerHeight / 2, 'player');
-    this.player.setSize(50, 58);
-    this.player.setGravityY(config.playerGravity);
+    const player = this.physics.add.existing(new Player(this, 50, window.innerHeight / 2));
 
-    this.player.anims.create({
-      key: 'walk',
-      frames: this.anims.generateFrameNumbers('player', { frames: [0, 1, 2, 1, 3, 4, 5, 4] }),
-      frameRate: 16,
-      repeat: -1,
-    });
-
-    this.player.anims.create({
-      key: 'fly',
-      frames: this.anims.generateFrameNumbers('player', { frames: [0, 6, 0, 7] }),
-      frameRate: 16,
-      repeat: -1,
-    });
-
-    this.physics.add.collider(this.player, this.platformGroup);
-
-    this.input.keyboard.on('keydown-SPACE', this.jump, this);
+    this.physics.add.collider(player, this.platformGroup);
   };
 
   update = (): void => {
-    if (!this.player || !this.platformGroup) return;
-
-    if (this.player.body.touching.down) {
-      this.player.anims.play('walk', true);
-    } else {
-      this.player.anims.play('fly', true);
-    }
-
-    if (this.player.y > window.innerHeight) {
-      this.scene.start('PlayGame');
-    }
-    this.player.x = config.playerStartPosition;
+    if (!this.platformGroup) return;
 
     let minDistance = window.innerWidth;
     this.platformGroup.getChildren().forEach((platform: any) => {
@@ -125,20 +94,5 @@ export default class Scene extends Phaser.Scene {
     }
     platform.displayWidth = platformWidth;
     this.nextPlatformDistance = Phaser.Math.Between(config.spawnRange[0], config.spawnRange[1]);
-  }
-
-  private jump(): void {
-    if (!this.player) return;
-
-    if (
-      this.player.body.touching.down ||
-      (this.playerJumps > 0 && this.playerJumps < config.jumps)
-    ) {
-      if (this.player.body.touching.down) {
-        this.playerJumps = 0;
-      }
-      this.player.setVelocityY(config.jumpForce * -1);
-      this.playerJumps++;
-    }
   }
 }
