@@ -1,17 +1,18 @@
 import * as tf from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 
+import BrainHelper from '../Helpers/BrainHelper';
 import config from '../config';
 import { PlayGameSceneType } from '../scene';
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
+  private readonly brain: tf.Sequential;
   private alive = true;
-  private brain: tf.Sequential;
 
   private score = 0;
   private jumps = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
+  constructor(scene: Phaser.Scene, x: number, y: number, brain?: tf.Sequential) {
     super(scene, x, y, 'player');
 
     scene.add.existing(this);
@@ -19,6 +20,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.setSize(50, 58);
     this.setGravityY(config.playerGravity);
+
+    this.brain = brain || BrainHelper.create();
 
     this.anims.create({
       key: 'walk',
@@ -33,27 +36,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       frameRate: 16,
       repeat: -1,
     });
-
-    this.brain = tf.sequential();
-    this.brain.add(
-      tf.layers.dense({
-        units: 8,
-        inputShape: [6],
-        activation: 'sigmoid',
-      })
-    );
-    this.brain.add(
-      tf.layers.dense({
-        units: 2,
-        activation: 'softmax',
-      })
-    );
-
-    return this;
   }
 
   preUpdate(time: number, delta: number): void {
     super.preUpdate(time, delta);
+
+    if (!this.alive) return;
 
     if (this.shouldJump()) {
       this.jump();
@@ -104,5 +92,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   setTransparency(numberOfPlayers: number): void {
     this.alpha = 1 / numberOfPlayers;
+  }
+
+  getBrain(): tf.Sequential {
+    return this.brain;
+  }
+
+  getScore(): number {
+    return this.score;
   }
 }

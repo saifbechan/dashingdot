@@ -1,4 +1,5 @@
 const config = {
+  players: 10,
   platformStartSpeed: 350,
   spawnRange: [150, 350],
   platformSizeRange: [150, 300],
@@ -6,6 +7,12 @@ const config = {
   jumpForce: 400,
   playerStartPosition: 200,
   jumps: 2,
+
+  layers: {
+    inputs: 6,
+    hidden: 8,
+    outputs: 2,
+  },
 };
 
 export default config;

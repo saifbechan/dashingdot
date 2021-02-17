@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 
 import config from '../config';
+import { PlayGameSceneType } from '../scene';
 
 export default class PlatformManager {
   private scene: Phaser.Scene;
@@ -14,14 +15,18 @@ export default class PlatformManager {
     this.scene = scene;
 
     this.group = scene.add.group({
-      removeCallback: (platform: any) => {
-        platform.scene.platformManager.addToPool(platform);
+      removeCallback: (child) => {
+        const platform = child as Phaser.Physics.Arcade.Sprite;
+        const scene = platform.scene as PlayGameSceneType;
+        scene.platformManager.addToPool(platform);
       },
     });
 
     this.pool = scene.add.group({
-      removeCallback: (platform: any) => {
-        platform.scene.platformManager.addToGroup(platform);
+      removeCallback: (child) => {
+        const platform = child as Phaser.Physics.Arcade.Sprite;
+        const scene = platform.scene as PlayGameSceneType;
+        scene.platformManager.addToGroup(platform);
       },
     });
 
@@ -38,7 +43,8 @@ export default class PlatformManager {
 
   update(): void {
     let minDistance = window.innerWidth;
-    this.group.getChildren().forEach((platform: any) => {
+    this.group.getChildren().forEach((child) => {
+      const platform = child as Phaser.Physics.Arcade.Sprite;
       const platformDistance = window.innerWidth - platform.x - platform.displayWidth / 2;
       minDistance = Math.min(minDistance, platformDistance);
       if (platform.x < -platform.displayWidth / 2) {

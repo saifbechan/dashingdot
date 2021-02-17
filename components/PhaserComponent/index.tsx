@@ -4,7 +4,7 @@ import { Game } from 'phaser';
 
 import Scene from '../../phaser/scene';
 
-const PhaserComponent = () => {
+const PhaserComponent = (): JSX.Element => {
   const phaserRef = useRef<Game>();
   const canvasRef = useRef<HTMLElement>(null);
 
