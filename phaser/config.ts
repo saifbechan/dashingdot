@@ -9,8 +9,8 @@ const config = {
   jumps: 2,
 
   layers: {
-    inputs: 6,
-    hidden: 8,
+    inputs: 13,
+    hidden: 20,
     outputs: 2,
   },
 };

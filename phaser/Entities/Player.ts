@@ -62,17 +62,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   private shouldJump = (): boolean =>
     tf.tidy(() => {
-      const scene = this.scene as PlayGameSceneType;
-      const xs = tf.tensor2d([
-        [
-          this.body.position.x / window.innerWidth,
-          this.body.position.y / window.innerHeight,
-          this.body.velocity.x / 10,
-          this.body.velocity.y / 10,
-          scene.platformManager.getGroup().getFirstAlive().getTopRight().x / window.innerWidth,
-          scene.platformManager.getGroup().getFirstAlive().getTopRight().y / window.innerHeight,
-        ],
-      ]);
+      const inputs = this.getInputs(this.scene as PlayGameSceneType);
+      const xs = tf.tensor2d([inputs]);
       const ys = this.brain.predict(xs) as tf.Tensor;
       const outputs = ys.dataSync();
       return outputs[0] > outputs[1];
@@ -101,4 +92,20 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   getScore(): number {
     return this.score;
   }
+
+  private getInputs = (scene: PlayGameSceneType): number[] => [
+    this.body.position.x / window.innerWidth,
+    this.body.position.y / window.innerHeight,
+    this.body.velocity.y / 10,
+    scene.platformManager.getGroup().getFirstAlive().getTopRight().x / window.innerWidth,
+    scene.platformManager.getGroup().getFirstAlive().getTopRight().y / window.innerHeight,
+    scene.platformManager.getGroup().getFirstNth(2, true).getTopLeft().x / window.innerWidth,
+    scene.platformManager.getGroup().getFirstNth(2, true).getTopLeft().y / window.innerHeight,
+    scene.platformManager.getGroup().getFirstNth(2, true).getTopRight().x / window.innerWidth,
+    scene.platformManager.getGroup().getFirstNth(2, true).getTopRight().y / window.innerHeight,
+    scene.platformManager.getGroup().getFirstNth(3, true).getTopLeft().x / window.innerWidth,
+    scene.platformManager.getGroup().getFirstNth(3, true).getTopLeft().y / window.innerHeight,
+    scene.platformManager.getGroup().getFirstNth(3, true).getTopRight().x / window.innerWidth,
+    scene.platformManager.getGroup().getFirstNth(3, true).getTopRight().y / window.innerHeight,
+  ];
 }
