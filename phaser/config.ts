@@ -1,17 +1,21 @@
 const config = {
-  players: 10,
+  players: 100,
   platformStartSpeed: 350,
-  spawnRange: [150, 350],
-  platformSizeRange: [150, 300],
+  spawnRange: [50, 150],
+  platformSizeRange: [200, 300],
   playerGravity: 900,
   jumpForce: 400,
   playerStartPosition: 200,
-  jumps: 2,
+  jumps: 1,
 
   layers: {
-    inputs: 13,
-    hidden: 20,
+    inputs: 7,
+    hidden: 4,
     outputs: 2,
+  },
+
+  mutation: {
+    rate: 0.4,
   },
 };
 

@@ -1,20 +1,11 @@
 import * as tf from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 
+import { PlayGameDataType } from './Helpers/Types';
 import PlatformManager from './World/PlatformManager';
 import PlayerManager from './World/PlayerManager';
 
-export type PlayGameDataType = {
-  brains: tf.Sequential[];
-  highscore: number;
-};
-
-export type PlayGameSceneType = Phaser.Scene & {
-  platformManager: PlatformManager;
-};
-
 export default class Scene extends Phaser.Scene {
-  private brains!: tf.Sequential[];
   private playerManager!: PlayerManager;
   private platformManager!: PlatformManager;
 
@@ -22,16 +13,14 @@ export default class Scene extends Phaser.Scene {
     super('PlayGame');
   }
 
-  init = (data: PlayGameDataType): void => {
-    this.brains = data.brains || [];
-
+  init = ({ highscore = 0 }: PlayGameDataType): void => {
     console.table({
       tensors: tf.memory().numTensors,
-      highscore: data.highscore || 0,
+      highscore: highscore,
     });
   };
 
-  create = (): void => {
+  create = ({ players = [] }: PlayGameDataType): void => {
     tf.setBackend('cpu').then();
 
     const width = this.scale.width;
@@ -40,7 +29,7 @@ export default class Scene extends Phaser.Scene {
     this.add.image(width * 0.5, height * 0.5, 'back').setScrollFactor(0);
     this.add.image(width * 0.5, height * 0.5, 'front').setScrollFactor(0.25);
 
-    this.playerManager = new PlayerManager(this, this.brains);
+    this.playerManager = new PlayerManager(this, players);
     this.platformManager = new PlatformManager(this);
 
     this.physics.add.collider(this.playerManager, this.platformManager.getGroup());

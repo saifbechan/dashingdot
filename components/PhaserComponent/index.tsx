@@ -23,6 +23,7 @@ const PhaserComponent = (): JSX.Element => {
             debug: false,
           },
         },
+        fps: { min: 20, target: 30 },
         scene: Scene,
       });
     }

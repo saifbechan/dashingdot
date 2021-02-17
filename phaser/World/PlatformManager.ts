@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 
+import { PlayGameSceneType } from '../Helpers/Types';
 import config from '../config';
-import { PlayGameSceneType } from '../scene';
 
 export default class PlatformManager {
   private scene: Phaser.Scene;
