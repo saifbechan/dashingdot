@@ -1,8 +1,8 @@
 const config = {
-  players: 100,
+  players: 50,
   platformStartSpeed: 350,
-  spawnRange: [50, 150],
-  platformSizeRange: [200, 300],
+  spawnRange: [75, 150],
+  platformSizeRange: [300, 400],
   playerGravity: 900,
   jumpForce: 400,
   playerStartPosition: 200,
@@ -15,7 +15,7 @@ const config = {
   },
 
   mutation: {
-    rate: 0.4,
+    rate: 0.1,
   },
 };
 

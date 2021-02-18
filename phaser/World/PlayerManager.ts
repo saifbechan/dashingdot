@@ -1,3 +1,4 @@
+import { Sequential } from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 
 import Player from '../Entities/Player';
@@ -13,19 +14,24 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
 
   constructor(scene: Phaser.Scene, players: PlayerDataType[]) {
     super(scene);
+    const brains: Sequential[] = [];
+    players.forEach(({ normalized, brain }: PlayerDataType) => {
+      for (let index = 0; index < normalized; index += 1) {
+        brains.push(BrainHelper.copy(brain));
+      }
+    });
     for (let index = 0; index < config.players; index++) {
-      const brain = BrainHelper.pick(players);
+      const brain = BrainHelper.create(brains);
       this.add(new Player(scene, 50, window.innerHeight / 2, brain));
     }
     players.forEach(({ brain }) => brain.dispose());
+    brains.forEach((brain) => brain.dispose());
   }
 
   update = (): void => {
     this.getChildren().forEach((child) => {
       const player = child as Player;
-      if (player.y < window.innerHeight - 50) {
-        player.setTransparency(this.countActive());
-      } else {
+      if (player.y > window.innerHeight - 50) {
         this.players.push({
           brain: player.getBrain(),
           fitness: player.getFitness(),

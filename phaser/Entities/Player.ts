@@ -57,11 +57,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   };
 
   getBrain = (): tf.Sequential => this.brain;
-  getFitness = (): number => this.steps + this.alive;
-
-  setTransparency = (numberOfPlayers: number): void => {
-    this.alpha = 1 / numberOfPlayers;
-  };
+  getFitness = (): number => this.steps;
 
   private shouldJump = (): boolean =>
     tf.tidy(() => {
@@ -72,7 +68,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       return outputs[0] > outputs[1];
     });
 
-  private jump(): void {
+  private jump = (): void => {
     if (this.body.touching.down || (this.jumps > 0 && this.jumps < config.jumps)) {
       if (this.body.touching.down) {
         this.jumps = 0;
@@ -80,7 +76,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       this.setVelocityY(config.jumpForce * -1);
       this.jumps++;
     }
-  }
+  };
 
   private getInputs = (scene: PlayGameSceneType): number[] => [
     this.body.position.x / window.innerWidth,

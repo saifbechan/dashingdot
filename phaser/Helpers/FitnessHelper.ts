@@ -7,6 +7,6 @@ export default class FitnessHelper {
   ): PlayerDataType[] =>
     players.map((player) => ({
       ...player,
-      normalized: player.fitness / highscore,
+      normalized: Math.floor((player.fitness / highscore) * 10),
     }));
 }

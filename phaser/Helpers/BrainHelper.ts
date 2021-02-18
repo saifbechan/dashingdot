@@ -1,65 +1,69 @@
 import * as tf from '@tensorflow/tfjs';
+import { sampleSize } from 'lodash';
 
 import config from '../config';
-import { PlayerDataType } from './Types';
 
 export default class BrainHelper {
-  static create(weights?: tf.Tensor[]): tf.Sequential {
-    const brain = tf.sequential();
-    brain.add(
-      tf.layers.dense({
-        units: config.layers.hidden,
-        inputShape: [config.layers.inputs],
-        activation: 'sigmoid',
-      })
-    );
-    brain.add(
-      tf.layers.dense({
-        units: config.layers.outputs,
-        activation: 'softmax',
-      })
-    );
-    if (weights) {
-      brain.setWeights(weights);
-      weights.map((weight) => weight.dispose());
-    }
-    return brain;
-  }
+  static create = (brains: tf.Sequential[]): tf.Sequential =>
+    brains.length === 0 ? BrainHelper.createRandom() : BrainHelper.createFromParents(brains);
 
-  static mutate = (weights: tf.Tensor[]): tf.Tensor[] => {
-    const mutatedWeights: tf.Tensor[] = [];
-    for (let index = 0; index < weights.length; index++) {
-      const tensor = weights[index];
-      const shape = weights[index].shape.slice();
-      const values = tensor.dataSync().slice();
-      for (let j = 0; j < values.length; j++) {
-        if (Math.random() < config.mutation.rate) {
-          const w = values[j];
-          values[j] = w + Math.random();
-        }
-      }
-      mutatedWeights[index] = tf.tensor(values, shape);
-    }
-    return mutatedWeights;
+  static copy = (source: tf.Sequential): tf.Sequential => {
+    const brain = BrainHelper.createRandom();
+    brain.setWeights(source.getWeights().slice());
+    return brain;
   };
 
-  static copy(brain: tf.Sequential): tf.Sequential {
-    const weights = BrainHelper.mutate(brain.getWeights().slice());
-    //const weights = brain.getWeights().slice();
-    return BrainHelper.create(weights);
-  }
+  private static createRandom = (): tf.Sequential =>
+    tf.sequential({
+      layers: [
+        tf.layers.dense({
+          units: config.layers.hidden,
+          inputShape: [config.layers.inputs],
+          activation: 'sigmoid',
+        }),
+        tf.layers.dense({
+          units: config.layers.outputs,
+          activation: 'softmax',
+        }),
+      ],
+    });
 
-  static pick(players: PlayerDataType[]): tf.Sequential {
-    if (players.length === 0) {
-      return BrainHelper.create();
+  private static createWithWeights = (weights: tf.Tensor[]): tf.Sequential => {
+    const brain = BrainHelper.createRandom();
+    brain.setWeights(weights);
+    weights.map((weight) => weight.dispose());
+    return brain;
+  };
+
+  private static createFromParents = (brains: tf.Sequential[]): tf.Sequential => {
+    const [brainX, brainY]: tf.Sequential[] = sampleSize(brains, 2);
+
+    const weightX = brainX.getWeights().slice();
+    const weightY = brainY.getWeights().slice();
+
+    const weightLength = weightX.length;
+
+    const mutatedWeights: tf.Tensor[] = [];
+    for (let index = 0; index < weightLength; index++) {
+      const shape = weightX[index].shape.slice();
+
+      const valuesX = weightX[index].dataSync().slice();
+      const valuesY = weightY[index].dataSync().slice();
+
+      const randomMidKey = Math.floor(Math.random() * valuesX.length);
+
+      const values = valuesX.map((value: number, key: number) => {
+        if (Math.random() < config.mutation.rate) {
+          return value + BrainHelper.randomGaussian();
+        }
+        return key > randomMidKey ? value : valuesY[key];
+      });
+      mutatedWeights[index] = tf.tensor(values, shape);
     }
-    let index = 0;
-    let r = Math.random();
-    while (r > 0) {
-      r = r - players[index].normalized;
-      index++;
-    }
-    index--;
-    return BrainHelper.copy(players[index].brain);
-  }
+
+    return BrainHelper.createWithWeights(mutatedWeights);
+  };
+
+  private static randomGaussian = (): number =>
+    Math.sqrt(-2.0 * Math.log(Math.random())) * Math.cos(2.0 * Math.PI * Math.random());
 }
