@@ -33,8 +33,6 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
     }
     players.forEach(({ brain }) => brain.dispose());
     brains.forEach((brain) => brain.dispose());
-
-    console.table([...scores, brains.length]);
   }
 
   update = (): void => {

@@ -10,7 +10,7 @@ const config = {
 
   layers: {
     inputs: 11,
-    hidden: 4,
+    hidden: 8,
     outputs: 2,
   },
 
