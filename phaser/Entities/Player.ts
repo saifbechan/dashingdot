@@ -9,8 +9,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   private alive = 0;
   private steps = 0;
-
-  private jumps = 0;
+  private currentJumps = 0;
+  private totalJumps = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, brain: tf.Sequential) {
     super(scene, x, y, 'player');
@@ -41,23 +41,40 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   preUpdate = (time: number, delta: number): void => {
     super.preUpdate(time, delta);
 
-    if (this.shouldJump()) {
-      this.jump();
-    }
-
     this.alive += 1;
+    this.x = config.playerStartPosition;
+
     if (this.body.touching.down) {
+      this.currentJumps = 0;
       this.anims.play('walk', true);
       this.steps += 1;
     } else {
       this.anims.play('fly', true);
+
+      if (this.currentJumps === config.allowedJumps) {
+        return;
+      }
     }
 
-    this.x = config.playerStartPosition;
+    if (this.shouldJump()) {
+      this.totalJumps += 1;
+      this.jump();
+    }
   };
 
   getBrain = (): tf.Sequential => this.brain;
-  getFitness = (): number => this.steps;
+
+  getFitness = (): number =>
+    this.totalJumps > 0 ? (this.steps + this.alive) / this.totalJumps : 0;
+
+  logStats = (scene: PlayGameSceneType): void => {
+    if (Math.floor(scene.time.now) % 10 >= 0) return;
+
+    console.log([
+      ...scene.platformManager.getNthPlatformBounds(0),
+      ...scene.platformManager.getNthPlatformBounds(1),
+    ]);
+  };
 
   private shouldJump = (): boolean =>
     tf.tidy(() => {
@@ -69,12 +86,15 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     });
 
   private jump = (): void => {
-    if (this.body.touching.down || (this.jumps > 0 && this.jumps < config.jumps)) {
+    if (
+      this.body.touching.down ||
+      (this.currentJumps > 0 && this.currentJumps < config.allowedJumps)
+    ) {
       if (this.body.touching.down) {
-        this.jumps = 0;
+        this.currentJumps = 0;
       }
       this.setVelocityY(config.jumpForce * -1);
-      this.jumps++;
+      this.currentJumps++;
     }
   };
 
@@ -82,9 +102,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.body.position.x / window.innerWidth,
     this.body.position.y / window.innerHeight,
     this.body.velocity.y / 10,
-    scene.platformManager.getGroup().getFirstAlive().getTopLeft().x / window.innerWidth,
-    scene.platformManager.getGroup().getFirstAlive().getTopLeft().y / window.innerHeight,
-    scene.platformManager.getGroup().getFirstAlive().getTopRight().x / window.innerWidth,
-    scene.platformManager.getGroup().getFirstAlive().getTopRight().y / window.innerHeight,
+    ...scene.platformManager.getNthPlatformBounds(0),
+    ...scene.platformManager.getNthPlatformBounds(1),
   ];
 }

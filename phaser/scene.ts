@@ -13,10 +13,10 @@ export default class Scene extends Phaser.Scene {
     super('PlayGame');
   }
 
-  init = ({ highscore = 0 }: PlayGameDataType): void => {
+  init = ({ maxFitness = 0 }: PlayGameDataType): void => {
     console.table({
       tensors: tf.memory().numTensors,
-      highscore: highscore,
+      maxFitness,
     });
   };
 

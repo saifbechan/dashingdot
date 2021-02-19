@@ -4,7 +4,7 @@ import PlatformManager from '../World/PlatformManager';
 
 export type PlayGameDataType = {
   players: PlayerDataType[];
-  highscore: number;
+  maxFitness: number;
 };
 
 export type PlayGameSceneType = Phaser.Scene & {
@@ -13,6 +13,8 @@ export type PlayGameSceneType = Phaser.Scene & {
 
 export type PlayerDataType = {
   brain: Sequential;
-  fitness: number;
-  normalized: number;
+  fitness: {
+    total: number;
+    normalized: number;
+  };
 };

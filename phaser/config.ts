@@ -2,14 +2,14 @@ const config = {
   players: 50,
   platformStartSpeed: 350,
   spawnRange: [75, 150],
-  platformSizeRange: [300, 400],
+  platformSizeRange: [150, 300],
   playerGravity: 900,
   jumpForce: 400,
   playerStartPosition: 200,
-  jumps: 1,
+  allowedJumps: 1,
 
   layers: {
-    inputs: 7,
+    inputs: 11,
     hidden: 4,
     outputs: 2,
   },

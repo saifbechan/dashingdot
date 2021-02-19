@@ -1,12 +1,23 @@
 import { PlayerDataType } from './Types';
 
 export default class FitnessHelper {
+  static getMaxFitness = (players: PlayerDataType[]): number => {
+    let maxFitness = 0;
+    players.forEach(({ fitness: { total } }) => {
+      maxFitness = Math.max(maxFitness, Math.floor(total));
+    });
+    return maxFitness;
+  };
+
   static normalizePlayersFitness = (
     players: PlayerDataType[],
-    highscore: number
+    maxFitness: number
   ): PlayerDataType[] =>
     players.map((player) => ({
       ...player,
-      normalized: Math.floor((player.fitness / highscore) * 10),
+      fitness: {
+        ...player.fitness,
+        normalized: Math.floor((Math.floor(player.fitness.total) / maxFitness) * 10),
+      },
     }));
 }

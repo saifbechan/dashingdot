@@ -33,15 +33,27 @@ export default class PlatformManager {
     this.addPlatform(window.innerWidth, window.innerHeight / 2);
   }
 
-  addToPool(platform: Phaser.GameObjects.GameObject): void {
+  addToPool = (platform: Phaser.GameObjects.GameObject): void => {
     this.pool.add(platform);
-  }
+  };
 
-  addToGroup(platform: Phaser.GameObjects.GameObject): void {
+  addToGroup = (platform: Phaser.GameObjects.GameObject): void => {
     this.group.add(platform);
-  }
+  };
 
-  update(): void {
+  getNthPlatformBounds = (nth: number): number[] => {
+    const platform = this.group.getFirstNth(nth, true);
+    return platform
+      ? [
+          platform.getTopLeft().x / window.innerWidth,
+          platform.getTopLeft().y / window.innerHeight,
+          platform.getTopRight().x / window.innerWidth,
+          platform.getTopRight().y / window.innerHeight,
+        ]
+      : [0, 0, 0, 0];
+  };
+
+  update = (): void => {
     let minDistance = window.innerWidth;
     this.group.getChildren().forEach((child) => {
       const platform = child as Phaser.Physics.Arcade.Sprite;
@@ -60,9 +72,9 @@ export default class PlatformManager {
       );
       this.addPlatform(nextPlatformWidth, window.innerWidth + nextPlatformWidth / 2);
     }
-  }
+  };
 
-  private addPlatform(platformWidth: number, posX: number): void {
+  private addPlatform = (platformWidth: number, posX: number): void => {
     let platform;
     if (this.pool.getLength()) {
       platform = this.pool.getFirst();
@@ -81,9 +93,7 @@ export default class PlatformManager {
     }
     platform.displayWidth = platformWidth;
     this.nextPlatformDistance = Phaser.Math.Between(config.spawnRange[0], config.spawnRange[1]);
-  }
+  };
 
-  getGroup(): Phaser.GameObjects.Group {
-    return this.group;
-  }
+  getGroup = (): Phaser.GameObjects.Group => this.group;
 }
