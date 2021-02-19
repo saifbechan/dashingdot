@@ -1,39 +1,35 @@
-import { Sequential } from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 
-import Player from '../Entities/Player';
-import BrainHelper from '../Helpers/BrainHelper';
-import FitnessHelper from '../Helpers/FitnessHelper';
-import { PlayerDataType, PlayGameDataType, PlayGameSceneType } from '../Helpers/Types';
-import config from '../config';
+import { PlayGameSceneType } from '../types';
+import Brain from './Player/Brain';
+import Player from './Player/Player';
 
 export default class PlayerManager extends Phaser.GameObjects.Group {
-  private readonly players: PlayerDataType[] = [];
+  private readonly brains: Brain[] = [];
 
-  constructor(scene: Phaser.Scene, players: PlayerDataType[]) {
+  constructor(scene: Phaser.Scene, players: number, brains: Brain[]) {
     super(scene);
 
-    const scores: number[] = [];
-
-    const brains: Sequential[] = [];
-    players.forEach(({ fitness: { normalized }, brain }: PlayerDataType) => {
-      if (scores[normalized]) {
-        scores[normalized] = scores[normalized] += 1;
-        return;
-      }
-
-      scores[normalized] = 1;
-      for (let index = 0; index < normalized; index += 1) {
-        brains.push(BrainHelper.copy(brain));
-      }
-    });
-    for (let index = 0; index < config.players; index++) {
-      const brain = BrainHelper.create(brains);
-      this.add(new Player(scene, 50, this.scene.scale.height / 2, brain));
+    if (brains.length === 0) {
+      this.populate(players);
+    } else {
+      this.evolve(brains);
     }
-    players.forEach(({ brain }) => brain.dispose());
-    brains.forEach((brain) => brain.dispose());
   }
+
+  populate = (players: number): void => {
+    [...Array(players)].map(() =>
+      this.add(new Player(this.scene, 50, this.scene.scale.height / 2, new Brain()))
+    );
+  };
+
+  evolve = (brains: Brain[]): void => {
+    brains.map(() =>
+      this.add(new Player(this.scene, 50, this.scene.scale.height / 2, new Brain()))
+    );
+  };
+
+  private evaluate = (brains: Brain[]): Brain[] => brains;
 
   update = (): void => {
     this.getChildren().forEach((child: Phaser.GameObjects.GameObject, index: number) => {
@@ -48,26 +44,12 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
 
       if (player.y < this.scene.scale.height - 50) return;
 
-      this.players.push({
-        brain: player.getBrain(),
-        fitness: {
-          total: player.getFitness(),
-          normalized: 0,
-        },
-      });
+      this.brains.push(player.getBrain());
 
       this.killAndHide(player);
       this.remove(player, true, true);
     });
   };
 
-  getData = (): PlayGameDataType => {
-    const maxFitness = FitnessHelper.getMaxFitness(this.players);
-    const players = FitnessHelper.normalizePlayersFitness(this.players, maxFitness);
-
-    return {
-      players,
-      maxFitness,
-    };
-  };
+  getBrains = (): Brain[] => this.brains;
 }

@@ -1,11 +1,11 @@
-import * as tf from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 
-import { PlayGameSceneType } from '../Helpers/Types';
-import config from '../config';
+import config from '../../config';
+import { PlayGameSceneType } from '../../types';
+import Brain from './Brain';
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
-  private readonly brain: tf.Sequential;
+  private readonly brain: Brain;
 
   private alive = 0;
   private steps = 0;
@@ -13,7 +13,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   private totalJumps = 0;
   private touching = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, brain: tf.Sequential) {
+  constructor(scene: Phaser.Scene, x: number, y: number, brain: Brain) {
     super(scene, x, y, 'player');
 
     this.brain = brain;
@@ -52,44 +52,19 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       this.touching += 1;
     } else {
       this.anims.play('fly', true);
-
-      if (this.currentJumps === config.allowedJumps) {
-        return;
-      }
     }
 
-    if (this.shouldJump()) {
+    if (
+      this.currentJumps !== config.allowedJumps &&
+      this.brain.shouldJump(this.getInputs(this.scene as PlayGameSceneType))
+    ) {
       this.touching = 0;
       this.totalJumps += 1;
       this.jump();
     }
+
+    this.brain.setFitness(this.getFitness());
   };
-
-  getBrain = (): tf.Sequential => this.brain;
-
-  getFitness = (): number => (this.totalJumps > 0 ? this.steps : 0);
-
-  setTransparency = (alpha: number): void => {
-    this.alpha = alpha;
-  };
-
-  logStats = (scene: PlayGameSceneType): void => {
-    if (Math.floor(scene.time.now) % 10 >= 0) return;
-
-    console.log([
-      ...scene.platformManager.getNthPlatformBounds(0),
-      ...scene.platformManager.getNthPlatformBounds(1),
-    ]);
-  };
-
-  private shouldJump = (): boolean =>
-    tf.tidy(() => {
-      const inputs = this.getInputs(this.scene as PlayGameSceneType);
-      const xs = tf.tensor2d([inputs]);
-      const ys = this.brain.predict(xs) as tf.Tensor;
-      const outputs = ys.dataSync();
-      return outputs[0] > outputs[1];
-    });
 
   private jump = (): void => {
     if (
@@ -111,4 +86,21 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     ...scene.platformManager.getNthPlatformBounds(0),
     ...scene.platformManager.getNthPlatformBounds(1),
   ];
+
+  private getFitness = (): number => (this.totalJumps > 0 ? this.steps : 0);
+
+  getBrain = (): Brain => this.brain;
+
+  setTransparency = (alpha: number): void => {
+    this.alpha = alpha;
+  };
+
+  logStats = (scene: PlayGameSceneType): void => {
+    if (Math.floor(scene.time.now) % 10 >= 0) return;
+
+    console.log([
+      ...scene.platformManager.getNthPlatformBounds(0),
+      ...scene.platformManager.getNthPlatformBounds(1),
+    ]);
+  };
 }
