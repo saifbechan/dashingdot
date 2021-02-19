@@ -67,6 +67,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   getFitness = (): number =>
     this.totalJumps > 0 ? (this.steps + this.alive) / this.totalJumps : 0;
 
+  setTransparency = (alpha: number): void => {
+    this.alpha = alpha;
+  };
+
   logStats = (scene: PlayGameSceneType): void => {
     if (Math.floor(scene.time.now) % 10 >= 0) return;
 
@@ -99,8 +103,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   };
 
   private getInputs = (scene: PlayGameSceneType): number[] => [
-    this.body.position.x / window.innerWidth,
-    this.body.position.y / window.innerHeight,
+    this.body.position.x / scene.scale.width,
+    this.body.position.y / this.scene.scale.height,
     this.body.velocity.y / 10,
     ...scene.platformManager.getNthPlatformBounds(0),
     ...scene.platformManager.getNthPlatformBounds(1),

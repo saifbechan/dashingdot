@@ -30,7 +30,7 @@ export default class PlatformManager {
       },
     });
 
-    this.addPlatform(window.innerWidth, window.innerHeight / 2);
+    this.addPlatform(scene.scale.width, scene.scale.height / 2);
   }
 
   addToPool = (platform: Phaser.GameObjects.GameObject): void => {
@@ -45,19 +45,19 @@ export default class PlatformManager {
     const platform = this.group.getFirstNth(nth, true);
     return platform
       ? [
-          platform.getTopLeft().x / window.innerWidth,
-          platform.getTopLeft().y / window.innerHeight,
-          platform.getTopRight().x / window.innerWidth,
-          platform.getTopRight().y / window.innerHeight,
+          platform.getTopLeft().x / this.scene.scale.width,
+          platform.getTopLeft().y / this.scene.scale.height,
+          platform.getTopRight().x / this.scene.scale.width,
+          platform.getTopRight().y / this.scene.scale.height,
         ]
       : [0, 0, 0, 0];
   };
 
   update = (): void => {
-    let minDistance = window.innerWidth;
+    let minDistance = this.scene.scale.width;
     this.group.getChildren().forEach((child) => {
       const platform = child as Phaser.Physics.Arcade.Sprite;
-      const platformDistance = window.innerWidth - platform.x - platform.displayWidth / 2;
+      const platformDistance = this.scene.scale.width - platform.x - platform.displayWidth / 2;
       minDistance = Math.min(minDistance, platformDistance);
       if (platform.x < -platform.displayWidth / 2) {
         this.group.killAndHide(platform);
@@ -70,7 +70,7 @@ export default class PlatformManager {
         config.platformSizeRange[0],
         config.platformSizeRange[1]
       );
-      this.addPlatform(nextPlatformWidth, window.innerWidth + nextPlatformWidth / 2);
+      this.addPlatform(nextPlatformWidth, this.scene.scale.width + nextPlatformWidth / 2);
     }
   };
 
@@ -84,7 +84,7 @@ export default class PlatformManager {
       this.pool.remove(platform);
     } else {
       platform = this.scene.physics.add
-        .sprite(posX, window.innerHeight * 0.8, 'platform')
+        .sprite(posX, this.scene.scale.height * 0.8, 'platform')
         .setScale(0.5)
         .refreshBody();
       platform.setImmovable(true);

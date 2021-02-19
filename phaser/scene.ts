@@ -26,7 +26,7 @@ export default class Scene extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
 
-    this.add.image(width * 0.5, height * 0.5, 'back').setScrollFactor(0);
+    this.add.image(width * 0.5, height * 0.4, 'back').setScrollFactor(0);
     this.add.image(width * 0.5, height * 0.5, 'front').setScrollFactor(0.25);
 
     this.playerManager = new PlayerManager(this, players);

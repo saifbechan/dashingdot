@@ -29,7 +29,7 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
     });
     for (let index = 0; index < config.players; index++) {
       const brain = BrainHelper.create(brains);
-      this.add(new Player(scene, 50, window.innerHeight / 2, brain));
+      this.add(new Player(scene, 50, this.scene.scale.height / 2, brain));
     }
     players.forEach(({ brain }) => brain.dispose());
     brains.forEach((brain) => brain.dispose());
@@ -38,20 +38,26 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
   update = (): void => {
     this.getChildren().forEach((child: Phaser.GameObjects.GameObject, index: number) => {
       const player = child as Player;
+
       if (index === 0) {
+        player.setTransparency(1);
         player.logStats(this.scene as PlayGameSceneType);
+      } else {
+        player.setTransparency(0.3);
       }
-      if (player.y > window.innerHeight - 50) {
-        this.players.push({
-          brain: player.getBrain(),
-          fitness: {
-            total: player.getFitness(),
-            normalized: 0,
-          },
-        });
-        this.killAndHide(player);
-        this.remove(player, true, true);
-      }
+
+      if (player.y < this.scene.scale.height - 50) return;
+
+      this.players.push({
+        brain: player.getBrain(),
+        fitness: {
+          total: player.getFitness(),
+          normalized: 0,
+        },
+      });
+
+      this.killAndHide(player);
+      this.remove(player, true, true);
     });
   };
 
