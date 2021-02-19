@@ -11,6 +11,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   private steps = 0;
   private currentJumps = 0;
   private totalJumps = 0;
+  private touching = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, brain: tf.Sequential) {
     super(scene, x, y, 'player');
@@ -47,7 +48,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.body.touching.down) {
       this.currentJumps = 0;
       this.anims.play('walk', true);
-      this.steps += 1;
+      this.steps += this.touching > 20 ? 10 : 1;
+      this.touching += 1;
     } else {
       this.anims.play('fly', true);
 
@@ -57,6 +59,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     if (this.shouldJump()) {
+      this.touching = 0;
       this.totalJumps += 1;
       this.jump();
     }
@@ -64,8 +67,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   getBrain = (): tf.Sequential => this.brain;
 
-  getFitness = (): number =>
-    this.totalJumps > 0 ? (this.steps + this.alive) / this.totalJumps : 0;
+  getFitness = (): number => (this.totalJumps > 0 ? this.steps : 0);
 
   setTransparency = (alpha: number): void => {
     this.alpha = alpha;
