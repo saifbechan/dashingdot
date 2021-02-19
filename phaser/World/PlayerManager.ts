@@ -17,7 +17,12 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
 
     const brains: Sequential[] = [];
     players.forEach(({ fitness: { normalized }, brain }: PlayerDataType) => {
-      scores[normalized] = scores[normalized] + 1 || 1;
+      if (scores[normalized]) {
+        scores[normalized] = scores[normalized] += 1;
+        return;
+      }
+
+      scores[normalized] = 1;
       for (let index = 0; index < normalized; index += 1) {
         brains.push(BrainHelper.copy(brain));
       }
