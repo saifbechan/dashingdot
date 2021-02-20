@@ -56,7 +56,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     if (
       this.currentJumps !== config.allowedJumps &&
-      this.brain.shouldJump(this.getInputs(this.scene as PlayGameSceneType))
+      this.brain.predict(this.getInputs(this.scene as PlayGameSceneType))
     ) {
       this.touching = 0;
       this.totalJumps += 1;

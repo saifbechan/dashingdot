@@ -21,8 +21,8 @@ export type NodeType = {
 
 export type ConnectionType = {
   index: number;
-  inputNode: number;
-  outputNode: number;
+  nbInputs: number;
+  nbOutputs: number;
   disabled: boolean;
   weight: number;
 };

@@ -1,10 +1,13 @@
 import * as tf from '@tensorflow/tfjs';
+import { sampleSize } from 'lodash';
 
 import config from '../../config';
 import { nodeType } from '../../contants';
-import { ConnectionType, NodeType } from '../../types';
+import { ConnectionType, NodeType, PlayGameSceneType } from '../../types';
 
 export default class Brain {
+  private readonly scene: PlayGameSceneType;
+
   private fitness = 0;
   private nodeCount = 0;
 
@@ -19,12 +22,15 @@ export default class Brain {
   private readonly connections: ConnectionType[] = [];
 
   constructor(
+    scene: PlayGameSceneType,
     nodes?: NodeType[],
     connections?: ConnectionType[],
     nbInputs = config.layers.inputs,
     nbHidden: number = config.layers.hidden,
     nbOutputs = config.layers.outputs
   ) {
+    this.scene = scene;
+
     this.nbInputs = nbInputs;
     this.nbHidden = nbHidden;
     this.nbOutputs = nbOutputs;
@@ -71,42 +77,13 @@ export default class Brain {
     this.fitness = fitness;
   };
 
-  shouldJump = (inputs: number[]): boolean =>
+  predict = (inputs: number[]): boolean =>
     tf.tidy(() => {
       const inputLayer = tf.tensor(inputs, [1, this.nbInputs]);
       const hiddenLayer = inputLayer.matMul(this.inputWeights).sigmoid();
       const outputLayer = hiddenLayer.matMul(this.outputWeights).sigmoid();
       return outputLayer.dataSync()[0] > 0.5;
     });
-
-  getLastInnovation = (): number =>
-    this.connections.length
-      ? this.connections.reduce(
-          (max, connection) => (connection.index > max ? connection.index : max),
-          this.connections[0].index
-        )
-      : 0;
-
-  getNode = (number: number): NodeType => this.nodes.filter((node) => node.number === number)[0];
-
-  getConnection = (number: number): ConnectionType | undefined =>
-    this.connections.filter((c) => c.index === number)[0];
-
-  getConnections = (): ConnectionType[] => this.connections;
-
-  clone = (): Brain => {
-    const clone = new Brain(undefined, undefined, this.nbInputs, this.nbHidden, this.nbOutputs);
-    clone.dispose();
-    clone.setInputWeights(tf.clone(this.inputWeights));
-    clone.setInputWeights(tf.clone(this.outputWeights));
-    return clone;
-  };
-
-  dispose = (): Brain => {
-    this.inputWeights.dispose();
-    this.outputWeights.dispose();
-    return this;
-  };
 
   crossover = (brain: Brain): Brain => {
     let n = 1;
@@ -128,7 +105,90 @@ export default class Brain {
       this.pushNew(connectionX, connectionY, childConnections, brain);
       c++;
     }
-    return new Brain(childNodes, childConnections, this.nbInputs, this.nbOutputs);
+    return new Brain(this.scene, childNodes, childConnections, this.nbInputs, this.nbOutputs);
+  };
+
+  mutate = (): Brain =>
+    sampleSize([this.addConnection, this.addNode, this.updateConnectionWeight], 1)[0]();
+
+  possibleNewConnection = (): ConnectionType | null => {
+    const existingConnections = this.connections
+      .filter((conn) => !conn.disabled)
+      .map((conn) => conn.nbInputs + '>' + conn.nbOutputs);
+
+    const possibleConnections: NodeType[][] = [];
+    this.nodes.forEach((input, index) => {
+      const possibilities: NodeType[][] = [];
+      this.nodes.slice(index + 1).forEach((output) => {
+        possibilities.push([input, output]);
+      });
+      possibleConnections.concat(possibilities);
+    });
+
+    possibleConnections.filter(
+      ([possibilityX, possibilityY]) =>
+        !existingConnections.includes(possibilityX.number + '>' + possibilityY.number) &&
+        !(possibilityX.type === nodeType.INPUT && possibilityY.type === nodeType.INPUT) &&
+        !(possibilityX.type === nodeType.OUTPUT && possibilityY.type === nodeType.OUTPUT)
+    );
+
+    const randomPossibility = sampleSize(possibleConnections, 1)[0];
+
+    if (!randomPossibility) return null;
+
+    return {
+      index: this.scene.playerManager.getInnovationNumber(),
+      nbInputs: randomPossibility[0].number,
+      nbOutputs: randomPossibility[1].number,
+    } as ConnectionType;
+  };
+
+  addConnection = (): Brain => {
+    const possibleNewConnection = this.possibleNewConnection();
+
+    if (possibleNewConnection) this.connections.push(possibleNewConnection);
+
+    return this;
+  };
+
+  addNode = (): Brain => this;
+
+  updateConnectionWeight = (): Brain => this;
+
+  getLastInnovation = (): number =>
+    this.connections.length
+      ? this.connections.reduce(
+          (max, connection) => (connection.index > max ? connection.index : max),
+          this.connections[0].index
+        )
+      : 0;
+
+  getNode = (number: number): NodeType => this.nodes.filter((node) => node.number === number)[0];
+
+  getConnection = (number: number): ConnectionType | undefined =>
+    this.connections.filter((c) => c.index === number)[0];
+
+  getConnections = (): ConnectionType[] => this.connections;
+
+  clone = (): Brain => {
+    const clone = new Brain(
+      this.scene,
+      undefined,
+      undefined,
+      this.nbInputs,
+      this.nbHidden,
+      this.nbOutputs
+    );
+    clone.dispose();
+    clone.setInputWeights(tf.clone(this.inputWeights));
+    clone.setInputWeights(tf.clone(this.outputWeights));
+    return clone;
+  };
+
+  dispose = (): Brain => {
+    this.inputWeights.dispose();
+    this.outputWeights.dispose();
+    return this;
   };
 
   private pushNew = (
@@ -149,8 +209,6 @@ export default class Brain {
       children.push(bConn);
     }
   };
-
-  mutate = (): Brain => this;
 
   distance = (brain: Brain): number => {
     const weights = { excess: 1, disjoint: 1, weight: 0.4 };

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 
 import config from '../config';
+import { PlayGameSceneType } from '../types';
 import Brain from './Player/Brain';
 import Player from './Player/Player';
 
@@ -13,7 +14,13 @@ export default class GeneticAlgorithm extends Phaser.GameObjects.Group {
   populate = (players: number): void => {
     this.addMultiple(
       [...Array(players)].map(
-        () => new Player(this.scene, 50, this.scene.scale.height / 2, new Brain())
+        () =>
+          new Player(
+            this.scene,
+            50,
+            this.scene.scale.height / 2,
+            new Brain(this.scene as PlayGameSceneType)
+          )
       )
     );
   };
