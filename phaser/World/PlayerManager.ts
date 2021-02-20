@@ -1,13 +1,12 @@
 import Phaser from 'phaser';
 
 import { PlayGameSceneType } from '../types';
+import GeneticAlgorithm from './GeneticAlgorithm';
 import Brain from './Player/Brain';
 import Player from './Player/Player';
 
-export default class PlayerManager extends Phaser.GameObjects.Group {
-  private readonly brains: Brain[] = [];
-
-  constructor(scene: Phaser.Scene, players: number, brains: Brain[]) {
+export default class PlayerManager extends GeneticAlgorithm {
+  constructor(scene: Phaser.Scene, players: number, species: Brain[][], brains: Brain[]) {
     super(scene);
 
     if (brains.length === 0) {
@@ -16,20 +15,6 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
       this.evolve(brains);
     }
   }
-
-  populate = (players: number): void => {
-    [...Array(players)].map(() =>
-      this.add(new Player(this.scene, 50, this.scene.scale.height / 2, new Brain()))
-    );
-  };
-
-  evolve = (brains: Brain[]): void => {
-    brains.map(() =>
-      this.add(new Player(this.scene, 50, this.scene.scale.height / 2, new Brain()))
-    );
-  };
-
-  private evaluate = (brains: Brain[]): Brain[] => brains;
 
   update = (): void => {
     this.getChildren().forEach((child: Phaser.GameObjects.GameObject, index: number) => {

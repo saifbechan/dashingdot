@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 
 import { Game } from 'phaser';
 
-import Scene from '../../phaser/scene';
+import Scene from '../../phaser/World/Scene';
 
 const PhaserComponent = (): JSX.Element => {
   const phaserRef = useRef<Game>();

@@ -14,8 +14,9 @@ const config = {
     outputs: 2,
   },
 
-  mutation: {
-    rate: 0.1,
+  genetics: {
+    survivalRate: 0.2,
+    mutationRate: 0.1,
   },
 };
 

@@ -1,10 +1,10 @@
 import * as tf from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 
-import PlatformManager from './World/PlatformManager';
-import PlayerManager from './World/PlayerManager';
-import config from './config';
-import { PlayGameDataType } from './types';
+import config from '../config';
+import { PlayGameDataType } from '../types';
+import PlatformManager from './PlatformManager';
+import PlayerManager from './PlayerManager';
 
 export default class Scene extends Phaser.Scene {
   private generation!: number;
@@ -33,7 +33,7 @@ export default class Scene extends Phaser.Scene {
     this.add.image(width * 0.5, height * 0.4, 'back').setScrollFactor(0);
     this.add.image(width * 0.5, height * 0.5, 'front').setScrollFactor(0.25);
 
-    this.playerManager = new PlayerManager(this, config.players, brains);
+    this.playerManager = new PlayerManager(this, config.players, [[]], brains);
     this.platformManager = new PlatformManager(this);
 
     this.physics.add.collider(this.playerManager, this.platformManager.getGroup());
@@ -44,8 +44,6 @@ export default class Scene extends Phaser.Scene {
     this.playerManager.update();
 
     if (this.playerManager.countActive() !== 0) return;
-
-    console.log('hhh');
 
     this.scene.start('PlayGame', {
       generation: ++this.generation,
