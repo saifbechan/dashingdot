@@ -1,6 +1,8 @@
 import '@testing-library/jest-dom';
 import 'jest-canvas-mock';
 
+jest.mock('@tensorflow/tfjs');
+
 Object.defineProperty(window, 'matchMedia', {
   value: () => ({
     matches: false,

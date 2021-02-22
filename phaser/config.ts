@@ -33,7 +33,7 @@ const config = {
   layers: {
     inputs: 11,
     hidden: 8,
-    outputs: 2,
+    outputs: 1,
   },
 
   genetics: {

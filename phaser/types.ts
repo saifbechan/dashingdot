@@ -1,15 +1,18 @@
+import GeneticAlgorithm from './World/GeneticAlgorithm';
 import PlatformManager from './World/PlatformManager';
-import Brain from './World/Player/Brain';
+import Brain from './World/Player/Brain/Brain';
 import PlayerManager from './World/PlayerManager';
 import { nodeType } from './contants';
 
 export type PlayGameDataType = {
   generation: number;
   brains: Brain[];
+  innovations: InnovationsType;
 };
 
 export type PlayGameSceneType = Phaser.Scene & {
   generation: number;
+  geneticAlgorithm: GeneticAlgorithm;
   playerManager: PlayerManager;
   platformManager: PlatformManager;
 };
@@ -19,10 +22,6 @@ export type NodeType = {
   type: nodeType;
 };
 
-export type ConnectionType = {
-  index: number;
-  nbInputs: number;
-  nbOutputs: number;
-  disabled: boolean;
-  weight: number;
-};
+export type InnovationNumberGeneratorType = (inputNode: number, outputNode: number) => number;
+
+export type InnovationsType = { [key: string]: number };

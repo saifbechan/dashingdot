@@ -1,60 +1,94 @@
-import Phaser from 'phaser';
-
 import config from '../config';
-import { PlayGameSceneType } from '../types';
-import Brain from './Player/Brain';
-import Player from './Player/Player';
+import { InnovationsType } from '../types';
+import Brain from './Player/Brain/Brain';
 
-export default class GeneticAlgorithm extends Phaser.GameObjects.Group {
-  private innovations = {};
+export default class GeneticAlgorithm {
+  private readonly populationSize: number;
+  private readonly currentPopulation: Brain[];
+  private readonly innovations: InnovationsType;
 
   protected readonly species: Brain[][] = [[]];
-  protected readonly brains: Brain[] = [];
 
-  populate = (players: number): void => {
-    this.addMultiple(
-      [...Array(players)].map(
-        () =>
-          new Player(
-            this.scene,
-            50,
-            this.scene.scale.height / 2,
-            new Brain(this.scene as PlayGameSceneType)
-          )
-      )
-    );
-  };
+  constructor(populationSize: number, currentPopulation: Brain[], innovations: InnovationsType) {
+    this.populationSize = populationSize;
+    this.innovations = innovations;
 
-  evolve = (brains: Brain[]): void => {
+    if (currentPopulation.length === 0) {
+      this.currentPopulation = this.populate();
+    } else {
+      this.currentPopulation = this.evolve(currentPopulation);
+    }
+  }
+
+  private populate = (): Brain[] =>
+    [...Array(this.populationSize)].map(() => new Brain(this.innovationNumberGenerator));
+
+  private evolve = (brains: Brain[]): Brain[] => {
     const evaluatedBrains = this.evaluate(brains);
     const selectedBrains = this.select(evaluatedBrains);
+    const reproducedBrains = this.reproduce(selectedBrains);
+    const repopulatedBrains = this.repopulate(reproducedBrains);
 
-    this.addMultiple(
-      this.reproduce(selectedBrains).map(
-        (brain) => new Player(this.scene, 50, this.scene.scale.height / 2, brain)
-      )
-    );
+    const stats = { nodes: 0, connections: 0 };
+    repopulatedBrains.map((brain) => {
+      stats.nodes += brain.getNodes().length;
+      stats.connections += brain.getConnections().length;
+    });
+    console.log(stats);
+
+    return repopulatedBrains;
   };
 
-  evaluate = (brains: Brain[]): Brain[] =>
+  private evaluate = (brains: Brain[]): Brain[] =>
     brains.sort((brainX: Brain, brainY: Brain) => brainY.getFitness() - brainX.getFitness());
 
-  select = (brains: Brain[], survivalRate: number = config.genetics.survivalRate): Brain[] =>
-    brains.slice(0, Math.ceil(brains.length * survivalRate));
+  private select = (
+    brains: Brain[],
+    survivalRate: number = config.genetics.survivalRate
+  ): Brain[] => {
+    const nbToKeep = Math.ceil(this.populationSize * survivalRate);
+    return brains.filter((brain, index) => {
+      if (index < nbToKeep) {
+        return true;
+      }
+      brain.dispose();
+    });
+  };
 
-  reproduce = (brains: Brain[]): Brain[] => {
+  private reproduce = (brains: Brain[]): Brain[] => {
     const children = [];
     for (let i = 0; i < brains.length; i++) {
       for (let j = i + 1; j < brains.length; j++) {
         children.push(brains[i].crossover(brains[j]).mutate());
       }
     }
-    return [...this.brains, ...children];
+    return [...brains, ...children];
   };
 
-  getInnovationNumber = (): number => Object.values(this.innovations).length;
+  private repopulate = (brains: Brain[]): Brain[] => {
+    if (brains.length > this.populationSize) {
+      return brains;
+    }
+    const newBrains = Array(this.populationSize - brains.length)
+      .fill('')
+      .map(() => new Brain(this.innovationNumberGenerator));
+    return [...brains, ...newBrains];
+  };
 
-  speciate = (species: Brain[][], brains: Brain[], threshold = 1): Brain[][] => {
+  private innovationNumberGenerator = (inputNode: number, outputNode: number): number => {
+    const connection =
+      outputNode > inputNode ? `${inputNode}>${outputNode}` : `${outputNode}>${inputNode}`;
+    const innovations = Object.values(this.innovations).length;
+    if (!this.innovations[connection]) {
+      this.innovations[connection] = innovations + 1;
+    }
+    return this.innovations[connection];
+  };
+
+  getInnovations = (): InnovationsType => this.innovations;
+  getCurrentPopulation = (): Brain[] => this.currentPopulation;
+
+  private speciate = (species: Brain[][], brains: Brain[], threshold = 1): Brain[][] => {
     const speciesRepresentation = species.map(
       (specie: Brain[]) => specie[Math.floor(Math.random() * species.length)]
     );

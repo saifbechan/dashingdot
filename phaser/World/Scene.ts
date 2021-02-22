@@ -3,11 +3,13 @@ import Phaser from 'phaser';
 
 import config from '../config';
 import { PlayGameDataType } from '../types';
+import GeneticAlgorithm from './GeneticAlgorithm';
 import PlatformManager from './PlatformManager';
 import PlayerManager from './PlayerManager';
 
 export default class Scene extends Phaser.Scene {
   private generation!: number;
+  private geneticAlgorithm!: GeneticAlgorithm;
   private playerManager!: PlayerManager;
   private platformManager!: PlatformManager;
 
@@ -15,16 +17,17 @@ export default class Scene extends Phaser.Scene {
     super('PlayGame');
   }
 
-  init = ({ generation = 1 }: PlayGameDataType): void => {
+  init = ({ generation = 1, innovations = {} }: PlayGameDataType): void => {
     this.generation = generation;
 
     console.table({
       generation,
       tensors: tf.memory().numTensors,
+      innovations: Object.keys(innovations).length,
     });
   };
 
-  create = ({ brains = [] }: PlayGameDataType): void => {
+  create = ({ brains = [], innovations = {} }: PlayGameDataType): void => {
     tf.setBackend('cpu').then();
 
     const width = this.scale.width;
@@ -33,7 +36,8 @@ export default class Scene extends Phaser.Scene {
     this.add.image(width * 0.5, height * 0.4, 'back').setScrollFactor(0);
     this.add.image(width * 0.5, height * 0.5, 'front').setScrollFactor(0.25);
 
-    this.playerManager = new PlayerManager(this, config.players, [[]], brains);
+    this.geneticAlgorithm = new GeneticAlgorithm(config.players, brains, innovations);
+    this.playerManager = new PlayerManager(this);
     this.platformManager = new PlatformManager(this);
 
     this.physics.add.collider(this.playerManager, this.platformManager.getGroup());
@@ -48,6 +52,7 @@ export default class Scene extends Phaser.Scene {
     this.scene.start('PlayGame', {
       generation: ++this.generation,
       brains: this.playerManager.getBrains(),
+      innovations: this.geneticAlgorithm.getInnovations(),
     } as PlayGameDataType);
   };
 

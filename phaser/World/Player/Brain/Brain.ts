@@ -1,12 +1,13 @@
 import * as tf from '@tensorflow/tfjs';
 import { sampleSize } from 'lodash';
 
-import config from '../../config';
-import { nodeType } from '../../contants';
-import { ConnectionType, NodeType, PlayGameSceneType } from '../../types';
+import config from '../../../config';
+import { nodeType } from '../../../contants';
+import { InnovationNumberGeneratorType, NodeType } from '../../../types';
+import Connection from './Connection';
 
 export default class Brain {
-  private readonly scene: PlayGameSceneType;
+  private readonly innovationNumberGenerator: InnovationNumberGeneratorType;
 
   private fitness = 0;
   private nodeCount = 0;
@@ -19,17 +20,17 @@ export default class Brain {
   private outputWeights!: tf.Tensor<tf.Rank>;
 
   private readonly nodes: NodeType[];
-  private readonly connections: ConnectionType[] = [];
+  private readonly connections: Connection[] = [];
 
   constructor(
-    scene: PlayGameSceneType,
+    innovationNumberGenerator: InnovationNumberGeneratorType,
     nodes?: NodeType[],
-    connections?: ConnectionType[],
-    nbInputs = config.layers.inputs,
+    connections?: Connection[],
+    nbInputs: number = config.layers.inputs,
     nbHidden: number = config.layers.hidden,
-    nbOutputs = config.layers.outputs
+    nbOutputs: number = config.layers.outputs
   ) {
-    this.scene = scene;
+    this.innovationNumberGenerator = innovationNumberGenerator;
 
     this.nbInputs = nbInputs;
     this.nbHidden = nbHidden;
@@ -92,29 +93,35 @@ export default class Brain {
     while (n <= maxNode) {
       const nodeX = this.getNode(n);
       const nodeY = brain.getNode(n);
-      this.pushNew(nodeX, nodeY, childNodes, brain);
+      this.addConnectionOrNode(nodeX, nodeY, childNodes, brain);
       n++;
     }
 
     let c = 1;
-    const childConnections: ConnectionType[] = [];
+    const childConnections: Connection[] = [];
     const maxConnection = Math.max(this.getLastInnovation(), brain.getLastInnovation());
     while (c <= maxConnection) {
       const connectionX = this.getConnection(c);
       const connectionY = brain.getConnection(c);
-      this.pushNew(connectionX, connectionY, childConnections, brain);
+      this.addConnectionOrNode(connectionX, connectionY, childConnections, brain);
       c++;
     }
-    return new Brain(this.scene, childNodes, childConnections, this.nbInputs, this.nbOutputs);
+    return new Brain(
+      this.innovationNumberGenerator,
+      childNodes,
+      childConnections,
+      this.nbInputs,
+      this.nbOutputs
+    );
   };
 
   mutate = (): Brain =>
     sampleSize([this.addConnection, this.addNode, this.updateConnectionWeight], 1)[0]();
 
-  possibleNewConnection = (): ConnectionType | null => {
+  possibleNewConnection = (): Connection | null => {
     const existingConnections = this.connections
-      .filter((conn) => !conn.disabled)
-      .map((conn) => conn.nbInputs + '>' + conn.nbOutputs);
+      .filter((conn) => !conn.getDisabled())
+      .map((conn) => conn.getInputNode() + '>' + conn.getOutputNode());
 
     const possibleConnections: NodeType[][] = [];
     this.nodes.forEach((input, index) => {
@@ -122,7 +129,7 @@ export default class Brain {
       this.nodes.slice(index + 1).forEach((output) => {
         possibilities.push([input, output]);
       });
-      possibleConnections.concat(possibilities);
+      possibleConnections.push(...possibilities);
     });
 
     possibleConnections.filter(
@@ -136,43 +143,92 @@ export default class Brain {
 
     if (!randomPossibility) return null;
 
-    return {
-      index: this.scene.playerManager.getInnovationNumber(),
-      nbInputs: randomPossibility[0].number,
-      nbOutputs: randomPossibility[1].number,
-    } as ConnectionType;
+    return new Connection(
+      this.innovationNumberGenerator,
+      randomPossibility[0].number,
+      randomPossibility[1].number
+    );
   };
 
   addConnection = (): Brain => {
     const possibleNewConnection = this.possibleNewConnection();
+    if (possibleNewConnection) {
+      this.connections.push(possibleNewConnection);
+    }
+    return this;
+  };
 
-    if (possibleNewConnection) this.connections.push(possibleNewConnection);
+  addNode = (): Brain => {
+    const randomConnection: Connection = this.getRandomConnection();
+    if (!randomConnection) {
+      return this;
+    }
+    const newNode = {
+      number: ++this.nodeCount,
+      type: nodeType.HIDDEN,
+    } as NodeType;
+    this.nodes.push(newNode);
+
+    this.connections.push(
+      new Connection(
+        this.innovationNumberGenerator,
+        randomConnection.getInputNode(),
+        newNode.number,
+        1
+      )
+    );
+
+    this.connections.push(
+      new Connection(
+        this.innovationNumberGenerator,
+        newNode.number,
+        randomConnection.getOutputNode(),
+        randomConnection.getWeight()
+      )
+    );
+
+    randomConnection.disable();
 
     return this;
   };
 
-  addNode = (): Brain => this;
+  updateConnectionWeight = (): Brain => {
+    const randomConnection: Connection = this.getRandomConnection();
+    if (!randomConnection) {
+      return this;
+    }
+    randomConnection.setWeight(Math.random());
 
-  updateConnectionWeight = (): Brain => this;
+    return this;
+  };
 
   getLastInnovation = (): number =>
     this.connections.length
       ? this.connections.reduce(
-          (max, connection) => (connection.index > max ? connection.index : max),
-          this.connections[0].index
+          (max, connection) =>
+            connection.getInnovationNumber() > max ? connection.getInnovationNumber() : max,
+          this.connections[0].getInnovationNumber()
         )
       : 0;
 
   getNode = (number: number): NodeType => this.nodes.filter((node) => node.number === number)[0];
 
-  getConnection = (number: number): ConnectionType | undefined =>
-    this.connections.filter((c) => c.index === number)[0];
+  getNodes = (): NodeType[] => this.nodes;
 
-  getConnections = (): ConnectionType[] => this.connections;
+  getConnection = (number: number): Connection | undefined =>
+    this.connections.filter((c) => c.getInnovationNumber() === number)[0];
+
+  getConnections = (): Connection[] => this.connections;
+
+  getRandomConnection = (): Connection =>
+    sampleSize(
+      this.connections.filter((connection) => !connection.getDisabled()),
+      1
+    )[0];
 
   clone = (): Brain => {
     const clone = new Brain(
-      this.scene,
+      this.innovationNumberGenerator,
       undefined,
       undefined,
       this.nbInputs,
@@ -191,22 +247,22 @@ export default class Brain {
     return this;
   };
 
-  private pushNew = (
-    aConn: ConnectionType | NodeType | undefined,
-    bConn: ConnectionType | NodeType | undefined,
-    children: (ConnectionType | NodeType)[],
+  private addConnectionOrNode = (
+    x: Connection | NodeType | undefined,
+    y: Connection | NodeType | undefined,
+    children: (Connection | NodeType)[],
     brain: Brain
   ): void => {
-    if (aConn && bConn) {
-      children.push(Math.random() > 0.5 ? aConn : bConn);
-    } else if (aConn && this.fitness > brain.fitness) {
-      children.push(aConn);
-    } else if (bConn && this.fitness < brain.fitness) {
-      children.push(bConn);
-    } else if (aConn) {
-      children.push(aConn);
-    } else if (bConn) {
-      children.push(bConn);
+    if (x && y) {
+      children.push(Math.random() > 0.5 ? x : y);
+    } else if (x && this.fitness > brain.getFitness()) {
+      children.push(x);
+    } else if (y && this.fitness < brain.getFitness()) {
+      children.push(y);
+    } else if (x) {
+      children.push(x);
+    } else if (y) {
+      children.push(y);
     }
   };
 
@@ -236,7 +292,7 @@ export default class Brain {
         else nbDisjoint++;
       } else if (aConn && bConn) {
         nbMatching++;
-        weightDiff += Math.abs(aConn.weight - bConn.weight);
+        weightDiff += Math.abs(aConn.getWeight() - bConn.getWeight());
       }
       c++;
     }

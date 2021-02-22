@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 
 import config from '../../config';
 import { PlayGameSceneType } from '../../types';
-import Brain from './Brain';
+import Brain from './Brain/Brain';
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
   private readonly brain: Brain;
@@ -87,7 +87,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     ...scene.platformManager.getNthPlatformBounds(1),
   ];
 
-  private getFitness = (): number => (this.totalJumps > 0 ? this.steps : 0);
+  private getFitness = (): number => this.alive;
 
   getBrain = (): Brain => this.brain;
 
