@@ -1,3 +1,4 @@
+import Paused from './World/Paused';
 import Scene from './World/Scene';
 
 const config = {
@@ -18,7 +19,7 @@ const config = {
       },
     },
     fps: { min: 20, target: 30 },
-    scene: Scene,
+    scene: [Scene, Paused],
   },
 
   players: 50,

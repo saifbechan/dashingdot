@@ -17,7 +17,6 @@ export default class Scene extends Phaser.Scene {
 
   constructor() {
     super('PlayGame');
-    console.log('aaa');
   }
 
   init = ({
@@ -48,6 +47,12 @@ export default class Scene extends Phaser.Scene {
     this.platformManager = new PlatformManager(this);
 
     this.physics.add.collider(this.playerManager, this.platformManager.getGroup());
+
+    this.scene.launch('Paused');
+    this.input.keyboard.on('keydown-P', () => {
+      this.scene.pause('PlayGame');
+      this.scene.resume('Paused');
+    });
   };
 
   update = (): void => {
