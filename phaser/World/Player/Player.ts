@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 
 import config from '../../config';
-import { PlayGameSceneType } from '../../types';
+import { PlayerDataType, PlayGameSceneType } from '../../types';
 import Brain from './Brain/Brain';
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
@@ -48,7 +48,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.body.touching.down) {
       this.currentJumps = 0;
       this.anims.play('walk', true);
-      this.steps += this.touching > 20 ? 10 : 1;
+      this.steps += 1;
       this.touching += 1;
     } else {
       this.anims.play('fly', true);
@@ -87,20 +87,19 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     ...scene.platformManager.getNthPlatformBounds(1),
   ];
 
-  private getFitness = (): number => this.alive;
+  private getFitness = (): number => this.steps;
 
-  getBrain = (): Brain => this.brain;
+  getPlayerData = (): PlayerDataType => ({
+    brain: this.brain,
+    fitness: this.getFitness(),
+    alive: this.alive,
+    steps: this.steps,
+    totalJumps: this.totalJumps,
+    nodes: this.brain.getNodes().length,
+    connections: this.brain.getConnections().length,
+  });
 
   setTransparency = (alpha: number): void => {
     this.alpha = alpha;
-  };
-
-  logStats = (scene: PlayGameSceneType): void => {
-    if (Math.floor(scene.time.now) % 10 >= 0) return;
-
-    console.log([
-      ...scene.platformManager.getNthPlatformBounds(0),
-      ...scene.platformManager.getNthPlatformBounds(1),
-    ]);
   };
 }

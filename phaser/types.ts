@@ -4,9 +4,19 @@ import PlatformManager from './World/PlatformManager';
 import Brain from './World/Player/Brain/Brain';
 import PlayerManager from './World/PlayerManager';
 
+export type PlayerDataType = {
+  brain: Brain;
+  fitness: number;
+  alive: number;
+  steps: number;
+  totalJumps: number;
+  nodes: number;
+  connections: number;
+};
+
 export type PlayGameDataType = {
   generation: number;
-  brains: Brain[];
+  playerData: PlayerDataType[];
   innovationManager: InnovationManager;
 };
 

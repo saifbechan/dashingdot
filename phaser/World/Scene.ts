@@ -22,6 +22,7 @@ export default class Scene extends Phaser.Scene {
   init = ({
     generation = 1,
     innovationManager = new InnovationManager(),
+    playerData = [],
   }: PlayGameDataType): void => {
     this.generation = generation;
     this.innovationManager = innovationManager;
@@ -31,9 +32,10 @@ export default class Scene extends Phaser.Scene {
       tensors: tf.memory().numTensors,
       innovations: Object.keys(innovationManager.getInnovations()).length,
     });
+    console.table(playerData);
   };
 
-  create = ({ brains = [] }: PlayGameDataType): void => {
+  create = ({ playerData = [] }: PlayGameDataType): void => {
     tf.setBackend('cpu').then();
 
     const width = this.scale.width;
@@ -42,7 +44,11 @@ export default class Scene extends Phaser.Scene {
     this.add.image(width * 0.5, height * 0.4, 'back').setScrollFactor(0);
     this.add.image(width * 0.5, height * 0.5, 'front').setScrollFactor(0.25);
 
-    this.geneticAlgorithm = new GeneticAlgorithm(config.players, brains, this.innovationManager);
+    this.geneticAlgorithm = new GeneticAlgorithm(
+      config.players,
+      playerData.map(({ brain }) => brain),
+      this.innovationManager
+    );
     this.playerManager = new PlayerManager(this);
     this.platformManager = new PlatformManager(this);
 
@@ -63,7 +69,7 @@ export default class Scene extends Phaser.Scene {
 
     this.scene.start('PlayGame', {
       generation: ++this.generation,
-      brains: this.playerManager.getBrains(),
+      playerData: this.playerManager.getPlayerData(),
       innovationManager: this.innovationManager,
     } as PlayGameDataType);
   };
