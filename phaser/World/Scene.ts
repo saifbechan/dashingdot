@@ -4,30 +4,37 @@ import Phaser from 'phaser';
 import config from '../config';
 import { PlayGameDataType } from '../types';
 import GeneticAlgorithm from './GeneticAlgorithm';
+import InnovationManager from './InnovationManager';
 import PlatformManager from './PlatformManager';
 import PlayerManager from './PlayerManager';
 
 export default class Scene extends Phaser.Scene {
   private generation!: number;
   private geneticAlgorithm!: GeneticAlgorithm;
+  private innovationManager!: InnovationManager;
   private playerManager!: PlayerManager;
   private platformManager!: PlatformManager;
 
   constructor() {
     super('PlayGame');
+    console.log('aaa');
   }
 
-  init = ({ generation = 1, innovations = {} }: PlayGameDataType): void => {
+  init = ({
+    generation = 1,
+    innovationManager = new InnovationManager(),
+  }: PlayGameDataType): void => {
     this.generation = generation;
+    this.innovationManager = innovationManager;
 
     console.table({
       generation,
       tensors: tf.memory().numTensors,
-      innovations: Object.keys(innovations).length,
+      innovations: Object.keys(innovationManager.getInnovations()).length,
     });
   };
 
-  create = ({ brains = [], innovations = {} }: PlayGameDataType): void => {
+  create = ({ brains = [] }: PlayGameDataType): void => {
     tf.setBackend('cpu').then();
 
     const width = this.scale.width;
@@ -36,7 +43,7 @@ export default class Scene extends Phaser.Scene {
     this.add.image(width * 0.5, height * 0.4, 'back').setScrollFactor(0);
     this.add.image(width * 0.5, height * 0.5, 'front').setScrollFactor(0.25);
 
-    this.geneticAlgorithm = new GeneticAlgorithm(config.players, brains, innovations);
+    this.geneticAlgorithm = new GeneticAlgorithm(config.players, brains, this.innovationManager);
     this.playerManager = new PlayerManager(this);
     this.platformManager = new PlatformManager(this);
 
@@ -52,7 +59,7 @@ export default class Scene extends Phaser.Scene {
     this.scene.start('PlayGame', {
       generation: ++this.generation,
       brains: this.playerManager.getBrains(),
-      innovations: this.geneticAlgorithm.getInnovations(),
+      innovationManager: this.innovationManager,
     } as PlayGameDataType);
   };
 

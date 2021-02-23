@@ -1,17 +1,19 @@
 import config from '../config';
-import { InnovationsType } from '../types';
+import InnovationManager from './InnovationManager';
 import Brain from './Player/Brain/Brain';
 
 export default class GeneticAlgorithm {
   private readonly populationSize: number;
   private readonly currentPopulation: Brain[];
-  private readonly innovations: InnovationsType;
+  private readonly innovationManager: InnovationManager;
 
-  protected readonly species: Brain[][] = [[]];
-
-  constructor(populationSize: number, currentPopulation: Brain[], innovations: InnovationsType) {
+  constructor(
+    populationSize: number,
+    currentPopulation: Brain[],
+    innovationManager: InnovationManager
+  ) {
     this.populationSize = populationSize;
-    this.innovations = innovations;
+    this.innovationManager = innovationManager;
 
     if (currentPopulation.length === 0) {
       this.currentPopulation = this.populate();
@@ -21,7 +23,7 @@ export default class GeneticAlgorithm {
   }
 
   private populate = (): Brain[] =>
-    [...Array(this.populationSize)].map(() => new Brain(this.innovationNumberGenerator));
+    [...Array(this.populationSize)].map(() => new Brain(this.innovationManager));
 
   private evolve = (brains: Brain[]): Brain[] => {
     const evaluatedBrains = this.evaluate(brains);
@@ -71,21 +73,10 @@ export default class GeneticAlgorithm {
     }
     const newBrains = Array(this.populationSize - brains.length)
       .fill('')
-      .map(() => new Brain(this.innovationNumberGenerator));
+      .map(() => new Brain(this.innovationManager));
     return [...brains, ...newBrains];
   };
 
-  private innovationNumberGenerator = (inputNode: number, outputNode: number): number => {
-    const connection =
-      outputNode > inputNode ? `${inputNode}>${outputNode}` : `${outputNode}>${inputNode}`;
-    const innovations = Object.values(this.innovations).length;
-    if (!this.innovations[connection]) {
-      this.innovations[connection] = innovations + 1;
-    }
-    return this.innovations[connection];
-  };
-
-  getInnovations = (): InnovationsType => this.innovations;
   getCurrentPopulation = (): Brain[] => this.currentPopulation;
 
   private speciate = (species: Brain[][], brains: Brain[], threshold = 1): Brain[][] => {

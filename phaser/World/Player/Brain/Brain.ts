@@ -2,12 +2,13 @@ import * as tf from '@tensorflow/tfjs';
 import { sampleSize } from 'lodash';
 
 import config from '../../../config';
-import { nodeType } from '../../../contants';
-import { InnovationNumberGeneratorType, NodeType } from '../../../types';
+import { NodeTypes } from '../../../contants';
+import InnovationManager from '../../InnovationManager';
 import Connection from './Connection';
+import Node from './Node';
 
 export default class Brain {
-  private readonly innovationNumberGenerator: InnovationNumberGeneratorType;
+  private readonly innovationManager: InnovationManager;
 
   private fitness = 0;
   private nodeCount = 0;
@@ -19,18 +20,18 @@ export default class Brain {
   private inputWeights!: tf.Tensor<tf.Rank>;
   private outputWeights!: tf.Tensor<tf.Rank>;
 
-  private readonly nodes: NodeType[];
+  private readonly nodes: Node[];
   private readonly connections: Connection[] = [];
 
   constructor(
-    innovationNumberGenerator: InnovationNumberGeneratorType,
-    nodes?: NodeType[],
+    innovationManager: InnovationManager,
+    nodes?: Node[],
     connections?: Connection[],
     nbInputs: number = config.layers.inputs,
     nbHidden: number = config.layers.hidden,
     nbOutputs: number = config.layers.outputs
   ) {
-    this.innovationNumberGenerator = innovationNumberGenerator;
+    this.innovationManager = innovationManager;
 
     this.nbInputs = nbInputs;
     this.nbHidden = nbHidden;
@@ -45,18 +46,8 @@ export default class Brain {
     }
 
     this.nodes = [
-      ...[...Array(this.nbInputs)].map(
-        (): NodeType => ({
-          number: ++this.nodeCount,
-          type: nodeType.INPUT,
-        })
-      ),
-      ...[...Array(this.nbOutputs)].map(
-        (): NodeType => ({
-          number: ++this.nodeCount,
-          type: nodeType.OUTPUT,
-        })
-      ),
+      ...[...Array(this.nbInputs)].map((): Node => new Node(++this.nodeCount, NodeTypes.INPUT)),
+      ...[...Array(this.nbOutputs)].map((): Node => new Node(++this.nodeCount, NodeTypes.OUTPUT)),
     ];
   }
 
@@ -88,7 +79,7 @@ export default class Brain {
 
   crossover = (brain: Brain): Brain => {
     let n = 1;
-    const childNodes: NodeType[] = [];
+    const childNodes: Node[] = [];
     const maxNode = Math.max(this.nodeCount, brain.nodeCount);
     while (n <= maxNode) {
       const nodeX = this.getNode(n);
@@ -107,7 +98,7 @@ export default class Brain {
       c++;
     }
     return new Brain(
-      this.innovationNumberGenerator,
+      this.innovationManager,
       childNodes,
       childConnections,
       this.nbInputs,
@@ -123,9 +114,9 @@ export default class Brain {
       .filter((conn) => !conn.getDisabled())
       .map((conn) => conn.getInputNode() + '>' + conn.getOutputNode());
 
-    const possibleConnections: NodeType[][] = [];
+    const possibleConnections: Node[][] = [];
     this.nodes.forEach((input, index) => {
-      const possibilities: NodeType[][] = [];
+      const possibilities: Node[][] = [];
       this.nodes.slice(index + 1).forEach((output) => {
         possibilities.push([input, output]);
       });
@@ -134,9 +125,13 @@ export default class Brain {
 
     possibleConnections.filter(
       ([possibilityX, possibilityY]) =>
-        !existingConnections.includes(possibilityX.number + '>' + possibilityY.number) &&
-        !(possibilityX.type === nodeType.INPUT && possibilityY.type === nodeType.INPUT) &&
-        !(possibilityX.type === nodeType.OUTPUT && possibilityY.type === nodeType.OUTPUT)
+        !existingConnections.includes(possibilityX.getNumber() + '>' + possibilityY.getNumber()) &&
+        !(
+          possibilityX.getType() === NodeTypes.INPUT && possibilityY.getType() === NodeTypes.INPUT
+        ) &&
+        !(
+          possibilityX.getType() === NodeTypes.OUTPUT && possibilityY.getType() === NodeTypes.OUTPUT
+        )
     );
 
     const randomPossibility = sampleSize(possibleConnections, 1)[0];
@@ -144,9 +139,9 @@ export default class Brain {
     if (!randomPossibility) return null;
 
     return new Connection(
-      this.innovationNumberGenerator,
-      randomPossibility[0].number,
-      randomPossibility[1].number
+      this.innovationManager,
+      randomPossibility[0].getNumber(),
+      randomPossibility[1].getNumber()
     );
   };
 
@@ -163,25 +158,22 @@ export default class Brain {
     if (!randomConnection) {
       return this;
     }
-    const newNode = {
-      number: ++this.nodeCount,
-      type: nodeType.HIDDEN,
-    } as NodeType;
+    const newNode = new Node(++this.nodeCount, NodeTypes.HIDDEN);
     this.nodes.push(newNode);
 
     this.connections.push(
       new Connection(
-        this.innovationNumberGenerator,
+        this.innovationManager,
         randomConnection.getInputNode(),
-        newNode.number,
+        newNode.getNumber(),
         1
       )
     );
 
     this.connections.push(
       new Connection(
-        this.innovationNumberGenerator,
-        newNode.number,
+        this.innovationManager,
+        newNode.getNumber(),
         randomConnection.getOutputNode(),
         randomConnection.getWeight()
       )
@@ -211,9 +203,9 @@ export default class Brain {
         )
       : 0;
 
-  getNode = (number: number): NodeType => this.nodes.filter((node) => node.number === number)[0];
+  getNode = (number: number): Node => this.nodes.filter((node) => node.getNumber() === number)[0];
 
-  getNodes = (): NodeType[] => this.nodes;
+  getNodes = (): Node[] => this.nodes;
 
   getConnection = (number: number): Connection | undefined =>
     this.connections.filter((c) => c.getInnovationNumber() === number)[0];
@@ -228,7 +220,7 @@ export default class Brain {
 
   clone = (): Brain => {
     const clone = new Brain(
-      this.innovationNumberGenerator,
+      this.innovationManager,
       undefined,
       undefined,
       this.nbInputs,
@@ -248,9 +240,9 @@ export default class Brain {
   };
 
   private addConnectionOrNode = (
-    x: Connection | NodeType | undefined,
-    y: Connection | NodeType | undefined,
-    children: (Connection | NodeType)[],
+    x: Connection | Node | undefined,
+    y: Connection | Node | undefined,
+    children: (Connection | Node)[],
     brain: Brain
   ): void => {
     if (x && y) {

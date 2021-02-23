@@ -1,4 +1,4 @@
-import { InnovationNumberGeneratorType } from '../../../types';
+import InnovationManager from '../../InnovationManager';
 
 export default class Connection {
   private readonly innovationNumber: number;
@@ -9,12 +9,12 @@ export default class Connection {
   private disabled: boolean;
 
   constructor(
-    innovationNumberGenerator: InnovationNumberGeneratorType,
+    innovationManager: InnovationManager,
     inputNode: number,
     outputNode: number,
     weight: number = Math.random()
   ) {
-    this.innovationNumber = innovationNumberGenerator(inputNode, outputNode);
+    this.innovationNumber = innovationManager.createIfNotExists(inputNode, outputNode);
     this.inputNode = inputNode;
     this.outputNode = outputNode;
     this.weight = weight;
