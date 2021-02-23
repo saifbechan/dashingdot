@@ -29,16 +29,7 @@ export default class GeneticAlgorithm {
     const evaluatedBrains = this.evaluate(brains);
     const selectedBrains = this.select(evaluatedBrains);
     const reproducedBrains = this.reproduce(selectedBrains);
-    const repopulatedBrains = this.repopulate(reproducedBrains);
-
-    const stats = { nodes: 0, connections: 0 };
-    repopulatedBrains.map((brain) => {
-      stats.nodes += brain.getNodes().length;
-      stats.connections += brain.getConnections().length;
-    });
-    console.log(stats);
-
-    return repopulatedBrains;
+    return this.repopulate(reproducedBrains);
   };
 
   private evaluate = (brains: Brain[]): Brain[] =>

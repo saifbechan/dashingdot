@@ -11,7 +11,6 @@ export default class Brain {
   private readonly innovationManager: InnovationManager;
 
   private fitness = 0;
-  private nodeCount = 0;
 
   private readonly nbInputs: number;
   private readonly nbHidden: number;
@@ -45,10 +44,13 @@ export default class Brain {
       return;
     }
 
-    this.nodes = [
-      ...[...Array(this.nbInputs)].map((): Node => new Node(++this.nodeCount, NodeTypes.INPUT)),
-      ...[...Array(this.nbOutputs)].map((): Node => new Node(++this.nodeCount, NodeTypes.OUTPUT)),
-    ];
+    this.nodes = [];
+    for (let i = 0; i < this.nbInputs; i++) {
+      this.nodes.push(new Node(this.nodes.length + 1, NodeTypes.INPUT));
+    }
+    for (let i = 0; i < this.nbOutputs; i++) {
+      this.nodes.push(new Node(this.nodes.length + 1, NodeTypes.OUTPUT));
+    }
   }
 
   private setInputWeights(
@@ -80,7 +82,7 @@ export default class Brain {
   crossover = (brain: Brain): Brain => {
     let n = 1;
     const childNodes: Node[] = [];
-    const maxNode = Math.max(this.nodeCount, brain.nodeCount);
+    const maxNode = Math.max(this.nodes.length + 1, this.nodes.length + 1);
     while (n <= maxNode) {
       const nodeX = this.getNode(n);
       const nodeY = brain.getNode(n);
@@ -97,6 +99,7 @@ export default class Brain {
       this.addConnectionOrNode(connectionX, connectionY, childConnections, brain);
       c++;
     }
+
     return new Brain(
       this.innovationManager,
       childNodes,
@@ -158,7 +161,7 @@ export default class Brain {
     if (!randomConnection) {
       return this;
     }
-    const newNode = new Node(++this.nodeCount, NodeTypes.HIDDEN);
+    const newNode = new Node(this.nodes.length + 1, NodeTypes.HIDDEN);
     this.nodes.push(newNode);
 
     this.connections.push(
@@ -185,23 +188,21 @@ export default class Brain {
   };
 
   updateConnectionWeight = (): Brain => {
-    const randomConnection: Connection = this.getRandomConnection();
-    if (!randomConnection) {
-      return this;
-    }
-    randomConnection.setWeight(Math.random());
-
+    this.connections.forEach((connection: Connection) => {
+      if (Math.random() < config.genetics.mutationRate) {
+        connection.setWeight(Math.random());
+      }
+    });
     return this;
   };
 
-  getLastInnovation = (): number =>
-    this.connections.length
-      ? this.connections.reduce(
-          (max, connection) =>
-            connection.getInnovationNumber() > max ? connection.getInnovationNumber() : max,
-          this.connections[0].getInnovationNumber()
-        )
-      : 0;
+  getLastInnovation = (): number => {
+    let maxInnovationNumber = 0;
+    this.connections.forEach((connection) => {
+      maxInnovationNumber = Math.max(connection.getInnovationNumber(), maxInnovationNumber);
+    });
+    return maxInnovationNumber;
+  };
 
   getNode = (number: number): Node => this.nodes.filter((node) => node.getNumber() === number)[0];
 
