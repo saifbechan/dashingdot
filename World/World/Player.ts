@@ -1,8 +1,9 @@
 import * as tf from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 
-import { PlayGameSceneType } from '../Helpers/Types';
+import predict from '../NeuroEvolution/NeuralNetwork/predict';
 import config from '../config';
+import { PlayGameSceneType } from '../types';
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
   private readonly brain: tf.Sequential;
@@ -48,7 +49,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.body.touching.down) {
       this.currentJumps = 0;
       this.anims.play('walk', true);
-      this.steps += this.touching > 20 ? 10 : 1;
+      this.steps += 1;
       this.touching += 1;
     } else {
       this.anims.play('fly', true);
@@ -65,31 +66,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
   };
 
-  getBrain = (): tf.Sequential => this.brain;
+  private shouldJump = (): boolean => {
+    const prediction = predict(this.brain, this.getInputs(<PlayGameSceneType>this.scene));
 
-  getFitness = (): number => (this.totalJumps > 0 ? this.steps : 0);
-
-  setTransparency = (alpha: number): void => {
-    this.alpha = alpha;
+    return prediction[0] > prediction[1];
   };
-
-  logStats = (scene: PlayGameSceneType): void => {
-    if (Math.floor(scene.time.now) % 10 >= 0) return;
-
-    console.log([
-      ...scene.platformManager.getNthPlatformBounds(0),
-      ...scene.platformManager.getNthPlatformBounds(1),
-    ]);
-  };
-
-  private shouldJump = (): boolean =>
-    tf.tidy(() => {
-      const inputs = this.getInputs(this.scene as PlayGameSceneType);
-      const xs = tf.tensor2d([inputs]);
-      const ys = this.brain.predict(xs) as tf.Tensor;
-      const outputs = ys.dataSync();
-      return outputs[0] > outputs[1];
-    });
 
   private jump = (): void => {
     if (
@@ -111,4 +92,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     ...scene.platformManager.getNthPlatformBounds(0),
     ...scene.platformManager.getNthPlatformBounds(1),
   ];
+
+  getBrain = (): tf.Sequential => this.brain;
+  getFitness = (): number => this.steps;
+
+  setTransparency = (alpha: number): void => {
+    this.alpha = alpha;
+  };
 }

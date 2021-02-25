@@ -1,11 +1,13 @@
 import * as tf from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 
-import { PlayGameDataType } from './Helpers/Types';
 import PlatformManager from './World/PlatformManager';
 import PlayerManager from './World/PlayerManager';
+import { PlayGameDataType } from './types';
 
 export default class Scene extends Phaser.Scene {
+  private generation!: number;
+
   private playerManager!: PlayerManager;
   private platformManager!: PlatformManager;
 
@@ -13,23 +15,23 @@ export default class Scene extends Phaser.Scene {
     super('PlayGame');
   }
 
-  init = ({ maxFitness = 0 }: PlayGameDataType): void => {
+  init = ({ generation = 0 }: PlayGameDataType): void => {
+    this.generation = generation;
+
     console.table({
       tensors: tf.memory().numTensors,
-      maxFitness,
+      generation,
     });
   };
 
-  create = ({ players = [] }: PlayGameDataType): void => {
-    tf.setBackend('cpu').then();
-
+  create = ({ playersData = [] }: PlayGameDataType): void => {
     const width = this.scale.width;
     const height = this.scale.height;
 
     this.add.image(width * 0.5, height * 0.4, 'back').setScrollFactor(0);
     this.add.image(width * 0.5, height * 0.5, 'front').setScrollFactor(0.25);
 
-    this.playerManager = new PlayerManager(this, players);
+    this.playerManager = new PlayerManager(this, playersData);
     this.platformManager = new PlatformManager(this);
 
     this.physics.add.collider(this.playerManager, this.platformManager.getGroup());
@@ -40,7 +42,10 @@ export default class Scene extends Phaser.Scene {
     this.playerManager.update();
 
     if (this.playerManager.countActive() === 0) {
-      this.scene.start('PlayGame', this.playerManager.getData() as PlayGameDataType);
+      this.scene.start('PlayGame', <PlayGameDataType>{
+        ...this.playerManager.getPlayersData(),
+        generation: this.generation + 1,
+      });
     }
   };
 

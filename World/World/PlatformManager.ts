@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 
-import { PlayGameSceneType } from '../Helpers/Types';
 import config from '../config';
+import { PlayGameSceneType } from '../types';
 
 export default class PlatformManager {
   private scene: Phaser.Scene;
@@ -30,7 +30,7 @@ export default class PlatformManager {
       },
     });
 
-    this.addPlatform(scene.scale.width, scene.scale.height / 2);
+    this.addPlatform(scene.scale.width, scene.scale.width / 2);
   }
 
   addToPool = (platform: Phaser.GameObjects.GameObject): void => {

@@ -1,10 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 
+import * as tf from '@tensorflow/tfjs';
 import { Game } from 'phaser';
 
-import Scene from '../../phaser/scene';
+import config from '../../World/config';
 
 const PhaserComponent = (): JSX.Element => {
+  tf.setBackend('cpu').then();
+
   const phaserRef = useRef<Game>();
   const canvasRef = useRef<HTMLElement>(null);
 
@@ -12,19 +15,11 @@ const PhaserComponent = (): JSX.Element => {
     if (phaserRef !== null) {
       phaserRef.current?.destroy(true);
       phaserRef.current = new Game({
-        backgroundColor: '#ccc',
-        type: Phaser.AUTO,
-        parent: canvasRef.current || undefined,
-        width: window.innerWidth,
-        height: window.innerHeight,
-        physics: {
-          default: 'arcade',
-          arcade: {
-            debug: false,
-          },
+        ...config.game,
+        scale: {
+          ...config.game.scale,
+          parent: canvasRef.current || undefined,
         },
-        fps: { min: 20, target: 30 },
-        scene: Scene,
       });
     }
   }, []);
