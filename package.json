@@ -21,7 +21,7 @@
     "clean": "rimraf out .next"
   },
   "dependencies": {
-    "@tensorflow/tfjs": "^3.1.0",
+    "@tensorflow/tfjs": "^3.2.0",
     "lodash": "^4.17.21",
     "next": "10.0.7",
     "phaser": "^3.52.0",
