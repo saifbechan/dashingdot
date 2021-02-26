@@ -32,6 +32,8 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
       const crossed = crossover(selected);
       const mutated = mutate(crossed);
 
+      console.log(playersData.length);
+
       repopulate(config.playerCount, mutated).forEach((brain: tf.Sequential) => {
         this.add(new Player(scene, 50, scene.scale.height / 2, brain));
       });
