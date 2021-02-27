@@ -22,6 +22,10 @@ const PhaserComponent = (): JSX.Element => {
         },
       });
     }
+
+    return () => {
+      window.location.reload();
+    };
   }, []);
 
   return <main data-testid="phaser" ref={canvasRef} />;
