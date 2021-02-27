@@ -1,13 +1,7 @@
 import * as tf from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 
-import crossover from '../NeuroEvolution/GeneticAlgorithm/crossover';
-import evaluate from '../NeuroEvolution/GeneticAlgorithm/evaluate';
-import mutate from '../NeuroEvolution/GeneticAlgorithm/mutate';
-import populate from '../NeuroEvolution/GeneticAlgorithm/populate';
-import repopulate from '../NeuroEvolution/GeneticAlgorithm/repopulate';
-import select from '../NeuroEvolution/GeneticAlgorithm/select';
-import speciate from '../NeuroEvolution/GeneticAlgorithm/speciate';
+import * as ga from '../NeuroEvolution/GeneticAlgorithm';
 import { EvolveableType } from '../NeuroEvolution/types';
 import config from '../config';
 import { PlayDataType } from '../types';
@@ -21,24 +15,26 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
 
     if (playersData.length === 0) {
       // Create a completely new generation (only on the first run)
-      populate(config.playerCount).forEach((brain: tf.Sequential) => {
+      ga.populate(config.playerCount).forEach((brain: tf.Sequential) => {
         this.add(new Player(scene, 50, scene.scale.height / 2, brain));
       });
     } else {
       // evolve the previous population (all other runs)
-      const evaluated = evaluate(playersData);
-      const speciated = speciate(evaluated);
+      const evaluated = ga.evaluate(playersData);
+      const speciated = ga.speciate(evaluated);
 
       // get our special selection
-      const selected = select(speciated);
+      const selected = ga.select(speciated);
 
       // get our children
-      const crossed = crossover(speciated);
-      const mutated = mutate(crossed);
+      const crossed = ga.crossover(speciated);
+      const mutated = ga.mutate(crossed);
 
-      repopulate(config.playerCount, [...selected, ...mutated]).forEach((brain: tf.Sequential) => {
-        this.add(new Player(scene, 50, scene.scale.height / 2, brain));
-      });
+      ga.repopulate(config.playerCount, [...selected, ...mutated]).forEach(
+        (brain: tf.Sequential) => {
+          this.add(new Player(scene, 50, scene.scale.height / 2, brain));
+        }
+      );
     }
   }
 

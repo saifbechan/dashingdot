@@ -1,7 +1,7 @@
 import * as tf from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 
-import predict from '../NeuroEvolution/NeuralNetwork/predict';
+import * as nn from '../NeuroEvolution/NeuralNetwork';
 import { EvolveableType } from '../NeuroEvolution/types';
 import config from '../config';
 import { PlaySceneType } from '../types';
@@ -67,7 +67,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   };
 
   private shouldJump = (): boolean => {
-    const prediction = predict(this.brain, this.getInputs(<PlaySceneType>this.scene));
+    const prediction = nn.predict(this.brain, this.getInputs(<PlaySceneType>this.scene));
     return prediction[0] > prediction[1];
   };
 
