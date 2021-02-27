@@ -1,11 +1,11 @@
 import { EvolveableType } from './NeuroEvolution/types';
 import PlatformManager from './World/PlatformManager';
 
-export type PlayGameDataType = {
+export type PlayDataType = {
   generation: number;
   playersData: EvolveableType[];
 };
 
-export type PlayGameSceneType = Phaser.Scene & {
+export type PlaySceneType = Phaser.Scene & {
   platformManager: PlatformManager;
 };

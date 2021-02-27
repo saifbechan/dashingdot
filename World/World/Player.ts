@@ -2,17 +2,18 @@ import * as tf from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 
 import predict from '../NeuroEvolution/NeuralNetwork/predict';
+import { EvolveableType } from '../NeuroEvolution/types';
 import config from '../config';
-import { PlayGameSceneType } from '../types';
+import { PlaySceneType } from '../types';
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
   private readonly brain: tf.Sequential;
 
-  private alive = 0;
-  private steps = 0;
-  private currentJumps = 0;
+  private timeAlive = 0;
+  private totalSteps = 0;
   private totalJumps = 0;
-  private touching = 0;
+
+  private currentJumps = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, brain: tf.Sequential) {
     super(scene, x, y, 'player');
@@ -43,14 +44,14 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   preUpdate = (time: number, delta: number): void => {
     super.preUpdate(time, delta);
 
-    this.alive += 1;
+    this.timeAlive += 1;
     this.x = config.playerStartPosition;
 
     if (this.body.touching.down) {
-      this.currentJumps = 0;
       this.anims.play('walk', true);
-      this.steps += 1;
-      this.touching += 1;
+
+      this.currentJumps = 0;
+      this.totalSteps += 1;
     } else {
       this.anims.play('fly', true);
 
@@ -60,15 +61,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     if (this.shouldJump()) {
-      this.touching = 0;
       this.totalJumps += 1;
       this.jump();
     }
   };
 
   private shouldJump = (): boolean => {
-    const prediction = predict(this.brain, this.getInputs(<PlayGameSceneType>this.scene));
-
+    const prediction = predict(this.brain, this.getInputs(<PlaySceneType>this.scene));
     return prediction[0] > prediction[1];
   };
 
@@ -85,7 +84,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
   };
 
-  private getInputs = (scene: PlayGameSceneType): number[] => [
+  private getInputs = (scene: PlaySceneType): number[] => [
     this.body.position.x / scene.scale.width,
     this.body.position.y / this.scene.scale.height,
     this.body.velocity.y / 10,
@@ -93,8 +92,16 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     ...scene.platformManager.getNthPlatformBounds(1),
   ];
 
-  getBrain = (): tf.Sequential => this.brain;
-  getFitness = (): number => this.steps;
+  private calculateFitness = (): number => this.totalSteps;
+
+  getPlayersData = (): EvolveableType =>
+    <EvolveableType>{
+      network: this.brain,
+      fitness: this.calculateFitness(),
+      timeAlive: this.timeAlive,
+      totalSteps: this.totalSteps,
+      totalJumps: this.totalJumps,
+    };
 
   setTransparency = (alpha: number): void => {
     this.alpha = alpha;

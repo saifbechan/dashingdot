@@ -3,28 +3,30 @@ import Phaser from 'phaser';
 
 import PlatformManager from './World/PlatformManager';
 import PlayerManager from './World/PlayerManager';
-import { PlayGameDataType } from './types';
+import { PlayDataType } from './types';
 
-export default class Scene extends Phaser.Scene {
+export default class Play extends Phaser.Scene {
   private generation!: number;
 
   private playerManager!: PlayerManager;
   private platformManager!: PlatformManager;
 
   constructor() {
-    super('PlayGame');
+    super('Play');
   }
 
-  init = ({ generation = 0 }: PlayGameDataType): void => {
+  init = ({ generation = 1 }: PlayDataType): void => {
     this.generation = generation;
 
     console.table({
-      tensors: tf.memory().numTensors,
       generation,
+      tensors: tf.memory().numTensors,
     });
   };
 
-  create = ({ playersData = [] }: PlayGameDataType): void => {
+  create = ({ playersData = [] }: PlayDataType): void => {
+    console.table(playersData);
+
     const width = this.scale.width;
     const height = this.scale.height;
 
@@ -35,6 +37,12 @@ export default class Scene extends Phaser.Scene {
     this.platformManager = new PlatformManager(this);
 
     this.physics.add.collider(this.playerManager, this.platformManager.getGroup());
+
+    this.scene.launch('Pause');
+    this.input.keyboard.on('keydown-P', () => {
+      this.scene.pause('Play');
+      this.scene.resume('Pause');
+    });
   };
 
   update = (): void => {
@@ -42,7 +50,7 @@ export default class Scene extends Phaser.Scene {
     this.playerManager.update();
 
     if (this.playerManager.countActive() === 0) {
-      this.scene.start('PlayGame', <PlayGameDataType>{
+      this.scene.start('Play', <PlayDataType>{
         ...this.playerManager.getPlayersData(),
         generation: this.generation + 1,
       });

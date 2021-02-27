@@ -10,7 +10,7 @@ import select from '../NeuroEvolution/GeneticAlgorithm/select';
 import speciate from '../NeuroEvolution/GeneticAlgorithm/speciate';
 import { EvolveableType } from '../NeuroEvolution/types';
 import config from '../config';
-import { PlayGameDataType } from '../types';
+import { PlayDataType } from '../types';
 import Player from './Player';
 
 export default class PlayerManager extends Phaser.GameObjects.Group {
@@ -25,16 +25,18 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
         this.add(new Player(scene, 50, scene.scale.height / 2, brain));
       });
     } else {
-      // Evolve the previous population (all other runs)
+      // evolve the previous population (all other runs)
       const evaluated = evaluate(playersData);
       const speciated = speciate(evaluated);
+
+      // get our special selection
       const selected = select(speciated);
-      const crossed = crossover(selected);
+
+      // get our children
+      const crossed = crossover(speciated);
       const mutated = mutate(crossed);
 
-      console.log(playersData.length);
-
-      repopulate(config.playerCount, mutated).forEach((brain: tf.Sequential) => {
+      repopulate(config.playerCount, [...selected, ...mutated]).forEach((brain: tf.Sequential) => {
         this.add(new Player(scene, 50, scene.scale.height / 2, brain));
       });
     }
@@ -48,18 +50,15 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
 
       if (player.y < this.scene.scale.height - 50) return;
 
-      this.playersData.push(<EvolveableType>{
-        network: player.getBrain(),
-        fitness: player.getFitness(),
-      });
+      this.playersData.push(player.getPlayersData());
 
       this.killAndHide(player);
       this.remove(player, true, true);
     });
   };
 
-  getPlayersData = (): PlayGameDataType =>
-    <PlayGameDataType>{
+  getPlayersData = (): PlayDataType =>
+    <PlayDataType>{
       playersData: this.playersData,
     };
 }

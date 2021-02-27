@@ -6,12 +6,12 @@ const create = (): tf.Sequential =>
   tf.sequential({
     layers: [
       tf.layers.dense({
-        units: config.layers.hidden,
-        inputShape: [config.layers.inputs],
+        units: config.model.hidden,
+        inputShape: [config.model.inputs],
         activation: 'sigmoid',
       }),
       tf.layers.dense({
-        units: config.layers.outputs,
+        units: config.model.outputs,
         activation: 'softmax',
       }),
     ],

@@ -13,7 +13,7 @@ const mutate = (population: EvolveableType[]): EvolveableType[] =>
       const shape = weight.shape.slice();
       const previousValues = weight.dataSync().slice();
       const newValues = previousValues.map((value: number) => {
-        if (Math.random() < config.mutation.rate) {
+        if (Math.random() < config.evolution.mutationRate) {
           return value + randomGaussian();
         }
         return value;
@@ -25,8 +25,6 @@ const mutate = (population: EvolveableType[]): EvolveableType[] =>
     const newNetwork = create();
     newNetwork.setWeights(mutatedWeights);
 
-    network.dispose();
-    weights.map((weight) => weight.dispose());
     mutatedWeights.map((weight) => weight.dispose());
 
     return <EvolveableType>{ network: newNetwork };

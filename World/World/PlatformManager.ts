@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 
 import config from '../config';
-import { PlayGameSceneType } from '../types';
+import { PlaySceneType } from '../types';
 
 export default class PlatformManager {
   private scene: Phaser.Scene;
@@ -17,7 +17,7 @@ export default class PlatformManager {
     this.group = scene.add.group({
       removeCallback: (child) => {
         const platform = child as Phaser.Physics.Arcade.Sprite;
-        const scene = platform.scene as PlayGameSceneType;
+        const scene = platform.scene as PlaySceneType;
         scene.platformManager.addToPool(platform);
       },
     });
@@ -25,7 +25,7 @@ export default class PlatformManager {
     this.pool = scene.add.group({
       removeCallback: (child) => {
         const platform = child as Phaser.Physics.Arcade.Sprite;
-        const scene = platform.scene as PlayGameSceneType;
+        const scene = platform.scene as PlaySceneType;
         scene.platformManager.addToGroup(platform);
       },
     });
