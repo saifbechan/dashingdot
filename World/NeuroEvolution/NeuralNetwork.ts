@@ -17,6 +17,12 @@ export const create = (): tf.Sequential =>
     ],
   });
 
+export const clone = (network: tf.Sequential): tf.Sequential => {
+  const newNetwork = create();
+  newNetwork.setWeights(network.getWeights());
+  return newNetwork;
+};
+
 export const predict = (
   network: tf.Sequential,
   inputs: number[]

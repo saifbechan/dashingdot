@@ -17,19 +17,25 @@ export const evaluate = (population: EvolveableType[]): EvolveableType[] =>
 
 export const speciate = (population: EvolveableType[]): EvolveableType[] => population;
 
-export const select = (population: EvolveableType[]): EvolveableType[] =>
-  population.filter((_: EvolveableType, index: number) => {
+export const select = (population: EvolveableType[]): EvolveableType[] => {
+  const selection: EvolveableType[] = [];
+  population.forEach(({ network }: EvolveableType, index: number) => {
     if (index < config.evolution.survivalRate * config.playerCount) {
-      return true;
+      selection.push(<EvolveableType>{ network: nn.clone(network) });
     }
   });
+  return selection;
+};
 
-export const crossover = (population: EvolveableType[]): EvolveableType[] =>
-  population.filter((_: EvolveableType, index: number) => {
+export const crossover = (population: EvolveableType[]): EvolveableType[] => {
+  const selection: EvolveableType[] = [];
+  population.forEach(({ network }: EvolveableType, index: number) => {
     if (index < config.evolution.crossoverRate * config.playerCount) {
-      return true;
+      selection.push(<EvolveableType>{ network: nn.clone(network) });
     }
   });
+  return selection;
+};
 
 export const mutate = (population: EvolveableType[]): EvolveableType[] =>
   population.map(({ network }) => {
@@ -47,11 +53,11 @@ export const mutate = (population: EvolveableType[]): EvolveableType[] =>
       });
 
       mutatedWeights.push(tf.tensor(newValues, shape));
+      weight.dispose();
     });
 
     const newNetwork = nn.create();
     newNetwork.setWeights(mutatedWeights);
-
     mutatedWeights.map((weight) => weight.dispose());
 
     return <EvolveableType>{ network: newNetwork };

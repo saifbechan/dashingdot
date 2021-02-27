@@ -35,6 +35,8 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
           this.add(new Player(scene, 50, scene.scale.height / 2, brain));
         }
       );
+
+      playersData.forEach(({ network }) => network.dispose());
     }
   }
 
