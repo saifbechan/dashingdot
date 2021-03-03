@@ -13,14 +13,13 @@ const config = {
 
   model: {
     inputs: 11,
-    hidden: 2,
+    hidden: 8,
     outputs: 2,
   },
 
   evolution: {
     survivalRate: 0.2, // goes untouched to the next generation
     crossoverRate: 0.4, // will create children
-
     mutationRate: 0.1, // how often do we mutate weights
   },
 

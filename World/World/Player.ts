@@ -10,10 +10,15 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   private readonly brain: tf.Sequential;
 
   private timeAlive = 0;
+
   private totalSteps = 0;
+  private subsequentSteps = 0;
+
   private totalJumps = 0;
 
   private currentJumps = 0;
+
+  private fitness = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, brain: tf.Sequential) {
     super(scene, x, y, 'player');
@@ -52,8 +57,15 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
       this.currentJumps = 0;
       this.totalSteps += 1;
+      this.subsequentSteps += 1;
+
+      if (this.subsequentSteps === 10) {
+        this.fitness += 1;
+      }
     } else {
       this.anims.play('fly', true);
+
+      this.subsequentSteps = 0;
 
       if (this.currentJumps === config.allowedJumps) {
         return;
@@ -92,12 +104,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     ...scene.platformManager.getNthPlatformBounds(1),
   ];
 
-  private calculateFitness = (): number => this.totalSteps;
-
   getPlayersData = (): EvolveableType =>
     <EvolveableType>{
       network: this.brain,
-      fitness: this.calculateFitness(),
+      fitness: this.fitness,
       timeAlive: this.timeAlive,
       totalSteps: this.totalSteps,
       totalJumps: this.totalJumps,
