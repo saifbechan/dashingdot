@@ -23,7 +23,7 @@
   "dependencies": {
     "@tensorflow/tfjs": "^3.2.0",
     "lodash": "^4.17.21",
-    "next": "10.0.7",
+    "next": "10.0.8",
     "phaser": "^3.52.0",
     "react": "17.0.1",
     "react-dom": "17.0.1"
