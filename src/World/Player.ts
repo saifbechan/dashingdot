@@ -10,15 +10,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   private readonly brain: tf.Sequential;
 
   private timeAlive = 0;
-
   private totalSteps = 0;
-  private subsequentSteps = 0;
-
-  private totalJumps = 0;
-
-  private currentJumps = 0;
-
-  private fitness = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, brain: tf.Sequential) {
     super(scene, x, y, 'player');
@@ -55,26 +47,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.body.touching.down) {
       this.anims.play('walk', true);
 
-      this.currentJumps = 0;
       this.totalSteps += 1;
-      this.subsequentSteps += 1;
 
-      if (this.subsequentSteps === 10) {
-        this.fitness += 1;
+      if (this.shouldJump()) {
+        this.setVelocityY(config.jumpForce * -1);
       }
     } else {
       this.anims.play('fly', true);
-
-      this.subsequentSteps = 0;
-
-      if (this.currentJumps === config.allowedJumps) {
-        return;
-      }
-    }
-
-    if (this.shouldJump()) {
-      this.totalJumps += 1;
-      this.jump();
     }
   };
 
@@ -82,20 +61,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if ((<PlaySceneType>this.scene).getArea().length === 0) return false;
 
     const prediction = nn.predict(this.brain, this.getInputs(<PlaySceneType>this.scene));
-    return prediction[0] > prediction[1];
-  };
 
-  private jump = (): void => {
-    if (
-      this.body.touching.down ||
-      (this.currentJumps > 0 && this.currentJumps < config.allowedJumps)
-    ) {
-      if (this.body.touching.down) {
-        this.currentJumps = 0;
-      }
-      this.setVelocityY(config.jumpForce * -1);
-      this.currentJumps++;
-    }
+    return prediction[0] > prediction[1];
   };
 
   private getInputs = (scene: PlaySceneType): number[] => [
@@ -108,10 +75,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   getPlayersData = (): EvolveableType =>
     <EvolveableType>{
       network: this.brain,
-      fitness: this.fitness,
+      fitness: this.timeAlive + this.totalSteps,
       timeAlive: this.timeAlive,
       totalSteps: this.totalSteps,
-      totalJumps: this.totalJumps,
     };
 
   setTransparency = (alpha: number): void => {
