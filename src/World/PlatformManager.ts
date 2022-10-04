@@ -10,9 +10,14 @@ export default class PlatformManager {
   private readonly pool: Phaser.GameObjects.Group;
 
   private nextPlatformDistance = 0;
+  private platformSpeed = 0;
+
+  private step = 0;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
+
+    this.platformSpeed = config.platformStartSpeed * -1;
 
     this.group = scene.add.group({
       removeCallback: (child) => {
@@ -54,14 +59,24 @@ export default class PlatformManager {
   };
 
   update = (): void => {
+    this.step += 1;
+
     let minDistance = this.scene.scale.width;
     this.group.getChildren().forEach((child) => {
       const platform = child as Phaser.Physics.Arcade.Sprite;
       const platformDistance = this.scene.scale.width - platform.x - platform.displayWidth / 2;
+
       minDistance = Math.min(minDistance, platformDistance);
+
       if (platform.x < -platform.displayWidth / 2) {
         this.group.killAndHide(platform);
         this.group.remove(platform);
+        return;
+      }
+
+      if (this.step % config.platformSpeedTreshhold === 0) {
+        this.platformSpeed -= this.step / config.platformSpeedTreshhold;
+        platform.setVelocityX(this.platformSpeed);
       }
     }, this);
 
@@ -88,7 +103,7 @@ export default class PlatformManager {
         .setScale(0.5)
         .refreshBody();
       platform.setImmovable(true);
-      platform.setVelocityX(config.platformStartSpeed * -1);
+      platform.setVelocityX(this.platformSpeed);
       this.group.add(platform);
     }
     platform.displayWidth = platformWidth;

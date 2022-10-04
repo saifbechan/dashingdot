@@ -14,19 +14,15 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
     super(scene);
 
     if (playersData.length === 0) {
-      // Create a completely new generation (only on the first run)
       ga.populate(config.playerCount).forEach((brain: tf.Sequential) => {
         this.add(new Player(scene, 50, scene.scale.height / 2, brain));
       });
     } else {
-      // evolve the previous population (all other runs)
       const evaluated = ga.evaluate(playersData);
       const speciated = ga.speciate(evaluated);
 
-      // get our special selection
       const selected = ga.select(speciated);
 
-      // get our children
       const crossed = ga.crossover(speciated);
       const mutated = ga.mutate(crossed);
 

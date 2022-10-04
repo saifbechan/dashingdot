@@ -59,9 +59,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   private shouldJump = (): boolean => {
     if ((<PlaySceneType>this.scene).getArea().length === 0) return false;
-
     const prediction = nn.predict(this.brain, this.getInputs(<PlaySceneType>this.scene));
-
     return prediction[0] > prediction[1];
   };
 

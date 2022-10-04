@@ -23,7 +23,10 @@ const game: Phaser.Types.Core.GameConfig = {
 
 const config = {
   playerCount: 50,
+
   platformStartSpeed: 350,
+  platformSpeedTreshhold: 500,
+
   spawnRange: [100, 200],
   platformSizeRange: [150, 300],
   playerGravity: 900,

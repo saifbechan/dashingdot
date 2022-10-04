@@ -5,11 +5,9 @@ import { EvolveableType } from './types';
 import config from '../config';
 import utils from './utils';
 
-// creating and array of populationSize and fill it with networks
 export const populate = (populationSize: number): tf.Sequential[] =>
   [...Array(populationSize)].map(() => nn.create());
 
-// Currently evaluation is just sorting the population from highest to lowest fitness
 export const evaluate = (population: EvolveableType[]): EvolveableType[] =>
   population.sort(
     (networkX: EvolveableType, networkY: EvolveableType) => networkX.fitness - networkY.fitness
