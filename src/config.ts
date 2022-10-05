@@ -42,7 +42,7 @@ const config = {
   },
 
   evolution: {
-    survivalRate: 0.2, // goes untouched to the next generation
+    survivalRate: 0.1, // goes untouched to the next generation
     crossoverRate: 0.4, // will create children
     mutationRate: 0.1, // how often do we mutate weights
   },

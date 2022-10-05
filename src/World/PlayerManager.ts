@@ -19,10 +19,10 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
       });
     } else {
       const evaluated = ga.evaluate(playersData);
-      const speciated = ga.speciate(evaluated);
 
-      const selected = ga.select(speciated);
+      const selected = ga.select(evaluated);
 
+      const speciated = ga.speciate(playersData);
       const crossed = ga.crossover(speciated);
       const mutated = ga.mutate(crossed);
 

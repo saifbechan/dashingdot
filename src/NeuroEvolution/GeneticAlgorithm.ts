@@ -13,7 +13,41 @@ export const evaluate = (population: EvolveableType[]): EvolveableType[] =>
     (networkX: EvolveableType, networkY: EvolveableType) => networkX.fitness - networkY.fitness
   );
 
-export const speciate = (population: EvolveableType[]): EvolveableType[] => population;
+export const speciate = (population: EvolveableType[]): EvolveableType[] => {
+  const speciated: EvolveableType[] = [];
+  const fitnessScores: number[] = [];
+
+  const reachedTargetCount = 0;
+
+  population.forEach((player: EvolveableType, index: number) => {
+    fitnessScores[index] = player.fitness;
+  });
+
+  const maxFitness: number = Math.max(...fitnessScores);
+
+  const totalFitness: number = fitnessScores.reduce(
+    (total: number, score: number) => (total += score)
+  );
+
+  const normalizedFitnessScores: number[] = fitnessScores.map((score: number) =>
+    Math.floor((score / maxFitness) * 100)
+  );
+
+  population.forEach((player: EvolveableType, index: number) => {
+    for (let i = 0; i < normalizedFitnessScores[index]; i += 1) {
+      speciated.push(player);
+    }
+  });
+
+  console.table({
+    'max-fitness': Math.floor(maxFitness),
+    'total-fitness': Math.floor(totalFitness),
+    'pool-size': speciated.length,
+    'reached-target': reachedTargetCount,
+  });
+
+  return speciated;
+};
 
 export const select = (population: EvolveableType[]): EvolveableType[] => {
   const selection: EvolveableType[] = [];
@@ -26,13 +60,41 @@ export const select = (population: EvolveableType[]): EvolveableType[] => {
 };
 
 export const crossover = (population: EvolveableType[]): EvolveableType[] => {
-  const selection: EvolveableType[] = [];
-  population.forEach(({ network }: EvolveableType, index: number) => {
-    if (index < config.evolution.crossoverRate * config.playerCount) {
-      selection.push(<EvolveableType>{ network: nn.clone(network) });
+  const crossed: EvolveableType[] = [];
+  const playersToCreate = (1 - config.evolution.crossoverRate) * config.playerCount;
+
+  for (let i = 0; i < playersToCreate; i++) {
+    const weights: tf.Tensor[] = [];
+
+    const weightsX = Phaser.Math.RND.pick(population).network.getWeights();
+    const weightsY = Phaser.Math.RND.pick(population).network.getWeights();
+
+    for (let j = 0; j < weightsX.length; j++) {
+      const values = [];
+      const shape = weightsX[j].shape.slice();
+
+      const valuesX = weightsX[j].dataSync().slice();
+      const valuesY = weightsY[j].dataSync().slice();
+
+      for (let k = 0; k < valuesX.length; k++) {
+        if (Math.random() < 0.5) {
+          values[k] = valuesX[k];
+        } else {
+          values[k] = valuesY[k];
+        }
+      }
+
+      weights[j] = tf.tensor(values, shape);
     }
-  });
-  return selection;
+
+    const brain = nn.create();
+    brain.setWeights(weights);
+    weights.map((weight) => weight.dispose());
+
+    crossed.push(<EvolveableType>{ network: brain });
+  }
+
+  return crossed;
 };
 
 export const mutate = (population: EvolveableType[]): EvolveableType[] =>
