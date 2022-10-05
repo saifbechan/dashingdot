@@ -10,16 +10,16 @@ export const populate = (populationSize: number): tf.Sequential[] =>
 
 export const evaluate = (population: EvolveableType[]): EvolveableType[] =>
   population.sort(
-    (networkX: EvolveableType, networkY: EvolveableType) => networkX.fitness - networkY.fitness
+    (networkX: EvolveableType, networkY: EvolveableType) => networkY.fitness - networkX.fitness
   );
 
 export const speciate = (population: EvolveableType[]): EvolveableType[] => {
   const speciated: EvolveableType[] = [];
   const fitnessScores: number[] = [];
 
-  const reachedTargetCount = 0;
+  const filteredPopulation = population.splice(0, config.playerCount / 2);
 
-  population.forEach((player: EvolveableType, index: number) => {
+  filteredPopulation.forEach((player: EvolveableType, index: number) => {
     fitnessScores[index] = player.fitness;
   });
 
@@ -33,7 +33,7 @@ export const speciate = (population: EvolveableType[]): EvolveableType[] => {
     Math.floor((score / maxFitness) * 100)
   );
 
-  population.forEach((player: EvolveableType, index: number) => {
+  filteredPopulation.forEach((player: EvolveableType, index: number) => {
     for (let i = 0; i < normalizedFitnessScores[index]; i += 1) {
       speciated.push(player);
     }
@@ -43,7 +43,6 @@ export const speciate = (population: EvolveableType[]): EvolveableType[] => {
     'max-fitness': Math.floor(maxFitness),
     'total-fitness': Math.floor(totalFitness),
     'pool-size': speciated.length,
-    'reached-target': reachedTargetCount,
   });
 
   return speciated;
@@ -61,7 +60,7 @@ export const select = (population: EvolveableType[]): EvolveableType[] => {
 
 export const crossover = (population: EvolveableType[]): EvolveableType[] => {
   const crossed: EvolveableType[] = [];
-  const playersToCreate = (1 - config.evolution.crossoverRate) * config.playerCount;
+  const playersToCreate = (1 - config.evolution.survivalRate) * config.playerCount;
 
   for (let i = 0; i < playersToCreate; i++) {
     const weights: tf.Tensor[] = [];

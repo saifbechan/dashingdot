@@ -12,6 +12,8 @@ export default class Play extends Phaser.Scene {
   private playerManager!: PlayerManager;
   private platformManager!: PlatformManager;
 
+  private playerCountText!: Phaser.GameObjects.Text;
+
   private area: number[] = [];
 
   constructor() {
@@ -28,8 +30,6 @@ export default class Play extends Phaser.Scene {
   };
 
   create = ({ playersData = [] }: PlayDataType) => {
-    console.table(playersData);
-
     const width = this.scale.width;
     const height = this.scale.height;
 
@@ -50,6 +50,12 @@ export default class Play extends Phaser.Scene {
     if (config.showGuides) {
       this.add.rectangle(210, this.scale.height * 0.8, 250, 20, 0x6666ff).setOrigin(0);
     }
+
+    this.playerCountText = this.add.text(
+      10,
+      10,
+      `Active players: ${this.playerManager.getChildren().length}`
+    );
   };
 
   update = (): void => {
@@ -63,6 +69,8 @@ export default class Play extends Phaser.Scene {
 
     this.platformManager.update();
     this.playerManager.update();
+
+    this.playerCountText.setText(`Active players: ${this.playerManager.getChildren().length}`);
 
     if (this.playerManager.countActive() === 0) {
       this.scene.start('Play', <PlayDataType>{
