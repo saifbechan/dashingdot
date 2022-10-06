@@ -67,8 +67,8 @@ export default class Play extends Phaser.Scene {
       this.area = [...context.getImageData(210, this.scale.height * 0.8, 250, 20).data];
     }
 
-    this.platformManager.update();
     this.playerManager.update();
+    this.platformManager.update();
 
     this.playerCountText.setText(`Active players: ${this.playerManager.getChildren().length}`);
 

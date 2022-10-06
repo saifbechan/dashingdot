@@ -25,7 +25,7 @@ const config = {
   playerCount: 50,
 
   platformStartSpeed: 350,
-  platformSpeedTreshhold: 500,
+  platformSpeedThreshold: 500,
 
   spawnRange: [100, 200],
   platformSizeRange: [150, 300],
@@ -44,6 +44,7 @@ const config = {
   evolution: {
     survivalRate: 0.1,
     mutationRate: 0.05,
+    fitnessThreshold: 20,
   },
 
   game,

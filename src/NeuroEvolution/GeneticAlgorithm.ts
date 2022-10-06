@@ -17,9 +17,7 @@ export const speciate = (population: EvolveableType[]): EvolveableType[] => {
   const speciated: EvolveableType[] = [];
   const fitnessScores: number[] = [];
 
-  const filteredPopulation = population.splice(0, config.playerCount / 2);
-
-  filteredPopulation.forEach((player: EvolveableType, index: number) => {
+  population.forEach((player: EvolveableType, index: number) => {
     fitnessScores[index] = player.fitness;
   });
 
@@ -33,7 +31,9 @@ export const speciate = (population: EvolveableType[]): EvolveableType[] => {
     Math.floor((score / maxFitness) * 100)
   );
 
-  filteredPopulation.forEach((player: EvolveableType, index: number) => {
+  population.forEach((player: EvolveableType, index: number) => {
+    if (normalizedFitnessScores[index] < config.evolution.fitnessThreshold) return;
+
     for (let i = 0; i < normalizedFitnessScores[index]; i += 1) {
       speciated.push(player);
     }

@@ -74,8 +74,8 @@ export default class PlatformManager {
         return;
       }
 
-      if (this.step % config.platformSpeedTreshhold === 0) {
-        this.platformSpeed -= this.step / config.platformSpeedTreshhold;
+      if (this.step % config.platformSpeedThreshold === 0) {
+        this.platformSpeed -= this.step / config.platformSpeedThreshold;
         platform.setVelocityX(this.platformSpeed);
       }
     }, this);
