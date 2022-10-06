@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import Pause from './Pause';
 import Play from './Play';
 
@@ -19,6 +20,7 @@ const game: Phaser.Types.Core.GameConfig = {
   },
   fps: { min: 20, target: 30 },
   scene: [Play, Pause],
+  seed: [uuidv4()],
 };
 
 const config = {

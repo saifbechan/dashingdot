@@ -5,6 +5,7 @@ import config from '../config';
 
 export default class PlatformManager {
   private scene: Phaser.Scene;
+  private rnd: Phaser.Math.RandomDataGenerator;
 
   private readonly group: Phaser.GameObjects.Group;
   private readonly pool: Phaser.GameObjects.Group;
@@ -16,6 +17,8 @@ export default class PlatformManager {
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
+
+    this.rnd = new Phaser.Math.RandomDataGenerator(config.game.seed);
 
     this.platformSpeed = config.platformStartSpeed * -1;
 
@@ -81,7 +84,7 @@ export default class PlatformManager {
     }, this);
 
     if (minDistance > this.nextPlatformDistance) {
-      const nextPlatformWidth = Phaser.Math.Between(
+      const nextPlatformWidth = this.rnd.between(
         config.platformSizeRange[0],
         config.platformSizeRange[1]
       );
@@ -107,7 +110,7 @@ export default class PlatformManager {
       this.group.add(platform);
     }
     platform.displayWidth = platformWidth;
-    this.nextPlatformDistance = Phaser.Math.Between(config.spawnRange[0], config.spawnRange[1]);
+    this.nextPlatformDistance = this.rnd.between(config.spawnRange[0], config.spawnRange[1]);
   };
 
   getGroup = (): Phaser.GameObjects.Group => this.group;
