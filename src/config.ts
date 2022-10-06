@@ -36,15 +36,14 @@ const config = {
   showGuides: false,
 
   model: {
-    inputs: 20003,
+    inputs: 16003,
     hidden: 10,
     outputs: 2,
   },
 
   evolution: {
     survivalRate: 0.1,
-    mutationRate: 0.05,
-    fitnessThreshold: 20,
+    mutationRate: 0.01,
   },
 
   game,

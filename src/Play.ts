@@ -48,7 +48,7 @@ export default class Play extends Phaser.Scene {
     });
 
     if (config.showGuides) {
-      this.add.rectangle(210, this.scale.height * 0.8, 250, 20, 0x6666ff).setOrigin(0);
+      this.add.rectangle(230, this.scale.height * 0.8, 200, 20, 0x6666ff).setOrigin(0);
     }
 
     this.playerCountText = this.add.text(
@@ -64,7 +64,7 @@ export default class Play extends Phaser.Scene {
     if (context === null) {
       this.area = [];
     } else {
-      this.area = [...context.getImageData(210, this.scale.height * 0.8, 250, 20).data];
+      this.area = [...context.getImageData(230, this.scale.height * 0.8, 200, 20).data];
     }
 
     this.playerManager.update();

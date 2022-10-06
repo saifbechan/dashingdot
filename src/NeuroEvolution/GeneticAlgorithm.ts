@@ -31,8 +31,12 @@ export const speciate = (population: EvolveableType[]): EvolveableType[] => {
     Math.floor((score / maxFitness) * 100)
   );
 
+  const avarageNormalizedFitnessScore: number =
+    normalizedFitnessScores.reduce((total: number, score: number) => (total += score)) /
+    normalizedFitnessScores.length;
+
   population.forEach((player: EvolveableType, index: number) => {
-    if (normalizedFitnessScores[index] < config.evolution.fitnessThreshold) return;
+    if (normalizedFitnessScores[index] < avarageNormalizedFitnessScore) return;
 
     for (let i = 0; i < normalizedFitnessScores[index]; i += 1) {
       speciated.push(player);
@@ -104,13 +108,9 @@ export const mutate = (population: EvolveableType[]): EvolveableType[] =>
     weights.forEach((weight) => {
       const shape = weight.shape.slice();
       const previousValues = weight.dataSync().slice();
-      const newValues = previousValues.map((value: number) => {
-        if (Math.random() < config.evolution.mutationRate) {
-          return value + utils.randomGaussian();
-        }
-        return value;
-      });
-
+      const newValues = previousValues.map((value: number) =>
+        Math.random() < config.evolution.mutationRate ? value + utils.randomGaussian() : value
+      );
       mutatedWeights.push(tf.tensor(newValues, shape));
       weight.dispose();
     });
