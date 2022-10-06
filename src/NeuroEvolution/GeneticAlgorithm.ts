@@ -3,6 +3,7 @@ import * as tf from '@tensorflow/tfjs';
 import * as nn from './NeuralNetwork';
 import { EvolveableType } from './types';
 import config from '../config';
+import pickFromArray from '../../lib/pick-from-array';
 import utils from './utils';
 
 export const populate = (populationSize: number): tf.Sequential[] =>
@@ -69,8 +70,8 @@ export const crossover = (population: EvolveableType[]): EvolveableType[] => {
   for (let i = 0; i < playersToCreate; i++) {
     const weights: tf.Tensor[] = [];
 
-    const weightsX = Phaser.Math.RND.pick(population).network.getWeights();
-    const weightsY = Phaser.Math.RND.pick(population).network.getWeights();
+    const weightsX = pickFromArray(population).network.getWeights();
+    const weightsY = pickFromArray(population).network.getWeights();
 
     for (let j = 0; j < weightsX.length; j++) {
       const values = [];
