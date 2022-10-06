@@ -48,7 +48,11 @@ export default class Play extends Phaser.Scene {
     });
 
     if (config.showGuides) {
-      this.add.rectangle(230, this.scale.height * 0.8, 200, 20, 0x6666ff).setOrigin(0);
+      config.guides.forEach((guide) =>
+        this.add
+          .rectangle(guide[0], this.scale.height * 0.8, guide[1], guide[2], 0x6666ff)
+          .setOrigin(0)
+      );
     }
 
     this.playerCountText = this.add.text(
@@ -59,12 +63,14 @@ export default class Play extends Phaser.Scene {
   };
 
   update = (): void => {
+    this.area = [];
     const context = this.game.canvas.getContext('2d');
-
-    if (context === null) {
-      this.area = [];
-    } else {
-      this.area = [...context.getImageData(230, this.scale.height * 0.8, 200, 20).data];
+    if (context !== null) {
+      config.guides.forEach((guide) =>
+        this.area.push(
+          ...context.getImageData(guide[0], this.scale.height * 0.8, guide[1], guide[2]).data
+        )
+      );
     }
 
     this.playerManager.update();

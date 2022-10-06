@@ -37,15 +37,17 @@ const config = {
   allowedJumps: 1,
   showGuides: false,
 
+  guides: [[230, 400, 5]],
+
   model: {
-    inputs: 16003,
+    inputs: 8003,
     hidden: 10,
     outputs: 2,
   },
 
   evolution: {
     survivalRate: 0.1,
-    mutationRate: 0.01,
+    mutationRate: 0.5,
   },
 
   game,
