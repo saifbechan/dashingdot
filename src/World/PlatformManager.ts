@@ -1,6 +1,5 @@
-import Phaser from 'phaser';
-
 import { PlaySceneType } from '../types';
+import Phaser from 'phaser';
 import config from '../config';
 
 export default class PlatformManager {

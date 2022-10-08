@@ -23,6 +23,25 @@ const game: Phaser.Types.Core.GameConfig = {
   seed: [uuidv4()],
 };
 
+export enum PlayerNames {
+  PUNK = 'punk',
+  CHAMP = 'champ',
+}
+
+export enum AnimationsNames {
+  FLY = 'fly',
+  WALK = 'walk',
+  JUMP = 'jump',
+}
+
+const players: {
+  animations: { [key in AnimationsNames]: number[] };
+  offset: { [key in PlayerNames]: number };
+} = {
+  animations: { fly: [0, 1, 2, 3], walk: [0, 1, 2, 3, 4, 5, 6, 7], jump: [0, 1, 2] },
+  offset: { punk: 50, champ: 32 },
+};
+
 const config = {
   playerCount: 50,
 
@@ -51,6 +70,8 @@ const config = {
   },
 
   game,
+
+  players,
 };
 
 export default config;

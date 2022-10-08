@@ -1,13 +1,12 @@
-import * as tf from '@tensorflow/tfjs';
-
-import * as nn from './NeuralNetwork';
 import { EvolveableType } from './types';
+import { Sequential, Tensor, tensor } from '@tensorflow/tfjs';
+import { clone, create } from './NeuralNetwork';
 import config from '../config';
 import pickFromArray from '../../lib/pick-from-array';
 import utils from './utils';
 
-export const populate = (populationSize: number): tf.Sequential[] =>
-  [...Array(populationSize)].map(() => nn.create());
+export const populate = (populationSize: number): Sequential[] =>
+  [...Array(populationSize)].map(() => create());
 
 export const evaluate = (population: EvolveableType[]): EvolveableType[] =>
   population.sort(
@@ -57,7 +56,7 @@ export const select = (population: EvolveableType[]): EvolveableType[] => {
   const selection: EvolveableType[] = [];
   population.forEach(({ network }: EvolveableType, index: number) => {
     if (index < config.evolution.survivalRate * config.playerCount) {
-      selection.push(<EvolveableType>{ network: nn.clone(network) });
+      selection.push(<EvolveableType>{ network: clone(network) });
     }
   });
   return selection;
@@ -68,7 +67,7 @@ export const crossover = (population: EvolveableType[]): EvolveableType[] => {
   const playersToCreate = (1 - config.evolution.survivalRate) * config.playerCount;
 
   for (let i = 0; i < playersToCreate; i++) {
-    const weights: tf.Tensor[] = [];
+    const weights: Tensor[] = [];
 
     const weightsX = pickFromArray(population).network.getWeights();
     const weightsY = pickFromArray(population).network.getWeights();
@@ -88,10 +87,10 @@ export const crossover = (population: EvolveableType[]): EvolveableType[] => {
         }
       }
 
-      weights[j] = tf.tensor(values, shape);
+      weights[j] = tensor(values, shape);
     }
 
-    const brain = nn.create();
+    const brain = create();
     brain.setWeights(weights);
     weights.map((weight) => weight.dispose());
 
@@ -104,7 +103,7 @@ export const crossover = (population: EvolveableType[]): EvolveableType[] => {
 export const mutate = (population: EvolveableType[]): EvolveableType[] =>
   population.map(({ network }) => {
     const weights = network.getWeights();
-    const mutatedWeights: tf.Tensor[] = [];
+    const mutatedWeights: Tensor[] = [];
 
     weights.forEach((weight) => {
       const shape = weight.shape.slice();
@@ -112,16 +111,16 @@ export const mutate = (population: EvolveableType[]): EvolveableType[] =>
       const newValues = previousValues.map((value: number) =>
         Math.random() < config.evolution.mutationRate ? value + utils.randomGaussian() : value
       );
-      mutatedWeights.push(tf.tensor(newValues, shape));
+      mutatedWeights.push(tensor(newValues, shape));
       weight.dispose();
     });
 
-    const newNetwork = nn.create();
+    const newNetwork = create();
     newNetwork.setWeights(mutatedWeights);
     mutatedWeights.map((weight) => weight.dispose());
 
     return <EvolveableType>{ network: newNetwork };
   });
 
-export const repopulate = (populationSize: number, population: EvolveableType[]): tf.Sequential[] =>
-  [...Array(populationSize)].map((_, index) => population[index]?.network || nn.create());
+export const repopulate = (populationSize: number, population: EvolveableType[]): Sequential[] =>
+  [...Array(populationSize)].map((_, index) => population[index]?.network || create());

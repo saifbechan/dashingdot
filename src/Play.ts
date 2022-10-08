@@ -1,10 +1,9 @@
-import * as tf from '@tensorflow/tfjs';
-import Phaser from 'phaser';
-import config from './config';
-
 import { PlayDataType } from './types';
+import { memory } from '@tensorflow/tfjs';
+import Phaser from 'phaser';
 import PlatformManager from './World/PlatformManager';
 import PlayerManager from './World/PlayerManager';
+import config, { AnimationsNames, PlayerNames } from './config';
 
 export default class Play extends Phaser.Scene {
   private generation!: number;
@@ -25,7 +24,7 @@ export default class Play extends Phaser.Scene {
 
     console.table({
       generation,
-      tensors: tf.memory().numTensors,
+      tensors: memory().numTensors,
     });
   };
 
@@ -90,9 +89,14 @@ export default class Play extends Phaser.Scene {
     this.load.image('back', 'images/backgrounds/purple/back.png');
     this.load.image('front', 'images/backgrounds/purple/front.png');
     this.load.image('platform', 'images/platforms/tile-purple.png');
-    this.load.spritesheet('player', 'images/players/punk.png', {
-      frameWidth: 75,
-      frameHeight: 75,
+
+    Object.values(PlayerNames).forEach((name) => {
+      Object.values(AnimationsNames).forEach((animation) => {
+        this.load.spritesheet(`${name}-${animation}`, `images/players/${name}-${animation}.png`, {
+          frameWidth: 150,
+          frameHeight: 150,
+        });
+      });
     });
   };
 

@@ -1,10 +1,7 @@
-import '@fontsource/open-sans/400.css';
-import '@fontsource/open-sans/700.css';
-
-import { ChakraProvider } from '@chakra-ui/react';
 import Head from 'next/head';
-import theme from '../styles/theme';
 import type { AppProps } from 'next/app';
+
+import '../styles/global.css';
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
@@ -18,9 +15,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <link href="/manifest.json" rel="manifest" />
         <meta content="react, typescript, javascript, github, nextjs" name="keywords" />
       </Head>
-      <ChakraProvider theme={theme}>
-        <Component {...pageProps} />
-      </ChakraProvider>
+      <Component {...pageProps} />
     </>
   );
 }

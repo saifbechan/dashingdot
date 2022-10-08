@@ -1,40 +1,51 @@
-import * as tf from '@tensorflow/tfjs';
-import Phaser from 'phaser';
-
-import * as nn from '../NeuroEvolution/NeuralNetwork';
 import { EvolveableType } from '../NeuroEvolution/types';
 import { PlaySceneType } from '../types';
-import config from '../config';
+import { Sequential } from '@tensorflow/tfjs';
+import { predict } from '../NeuroEvolution/NeuralNetwork';
+import Phaser from 'phaser';
+import config, { PlayerNames } from '../config';
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
-  private readonly brain: tf.Sequential;
+  private readonly brain: Sequential;
 
   private timeAlive = 0;
   private totalSteps = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, brain: tf.Sequential) {
-    super(scene, x, y, 'player');
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    brain: Sequential,
+    name: PlayerNames = PlayerNames.PUNK
+  ) {
+    super(scene, x, y, name);
+
+    this.setName(name);
+
+    const {
+      playerGravity,
+      players: { animations, offset },
+    } = config;
 
     this.brain = brain;
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
-    this.setSize(50, 58);
-    this.setGravityY(config.playerGravity);
+    this.setScale(0.5);
+    this.setSize(85, 85);
+    this.setGravityY(playerGravity);
+    this.setOffset(offset[name]);
 
-    this.anims.create({
-      key: 'walk',
-      frames: this.anims.generateFrameNumbers('player', { frames: [0, 1, 2, 1, 3, 4, 5, 4] }),
-      frameRate: 16,
-      repeat: -1,
-    });
-
-    this.anims.create({
-      key: 'fly',
-      frames: this.anims.generateFrameNumbers('player', { frames: [0, 6, 0, 7] }),
-      frameRate: 16,
-      repeat: -1,
+    (Object.keys(animations) as Array<keyof typeof animations>).forEach((key) => {
+      this.anims.create({
+        key,
+        frames: this.anims.generateFrameNumbers(`${name}-${key}`, {
+          frames: animations[key],
+        }),
+        frameRate: 16,
+        repeat: -1,
+      });
     });
   }
 
@@ -59,7 +70,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   private shouldJump = (): boolean => {
     if ((<PlaySceneType>this.scene).getArea().length === 0) return false;
-    const prediction = nn.predict(this.brain, this.getInputs(<PlaySceneType>this.scene));
+    const prediction = predict(this.brain, this.getInputs(<PlaySceneType>this.scene));
     return prediction[0] > prediction[1];
   };
 

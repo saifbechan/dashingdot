@@ -1,6 +1,6 @@
-import * as tf from '@tensorflow/tfjs';
+import { Sequential } from '@tensorflow/tfjs';
 
 export type EvolveableType = {
-  network: tf.Sequential;
+  network: Sequential;
   fitness: number;
 };

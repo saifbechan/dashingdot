@@ -1,9 +1,16 @@
-import * as tf from '@tensorflow/tfjs';
-import Phaser from 'phaser';
-
-import * as ga from '../NeuroEvolution/GeneticAlgorithm';
 import { EvolveableType } from '../NeuroEvolution/types';
 import { PlayDataType } from '../types';
+import { Sequential } from '@tensorflow/tfjs';
+import {
+  crossover,
+  evaluate,
+  mutate,
+  populate,
+  repopulate,
+  select,
+  speciate,
+} from '../NeuroEvolution/GeneticAlgorithm';
+import Phaser from 'phaser';
 import Player from './Player';
 import config from '../config';
 
@@ -14,23 +21,21 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
     super(scene);
 
     if (playersData.length === 0) {
-      ga.populate(config.playerCount).forEach((brain: tf.Sequential) => {
+      populate(config.playerCount).forEach((brain: Sequential) => {
         this.add(new Player(scene, 50, scene.scale.height / 2, brain));
       });
     } else {
-      const evaluated = ga.evaluate(playersData);
+      const evaluated = evaluate(playersData);
 
-      const selected = ga.select(evaluated);
+      const selected = select(evaluated);
 
-      const speciated = ga.speciate(playersData);
-      const crossed = ga.crossover(speciated);
-      const mutated = ga.mutate(crossed);
+      const speciated = speciate(playersData);
+      const crossed = crossover(speciated);
+      const mutated = mutate(crossed);
 
-      ga.repopulate(config.playerCount, [...selected, ...mutated]).forEach(
-        (brain: tf.Sequential) => {
-          this.add(new Player(scene, 50, scene.scale.height / 2, brain));
-        }
-      );
+      repopulate(config.playerCount, [...selected, ...mutated]).forEach((brain: Sequential) => {
+        this.add(new Player(scene, 200, scene.scale.height / 2, brain));
+      });
 
       playersData.forEach(({ network }) => network.dispose());
     }
