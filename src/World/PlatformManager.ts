@@ -1,6 +1,6 @@
-import { PlaySceneType } from '../types';
+import { PlaySceneType } from '../Play';
 import Phaser from 'phaser';
-import config from '../config';
+import config from '../../lib/config';
 
 export default class PlatformManager {
   private scene: Phaser.Scene;

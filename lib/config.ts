@@ -1,6 +1,7 @@
+import { AnimationsNames, PlayerNames } from '../src/World/Player';
 import { v4 as uuidv4 } from 'uuid';
-import Pause from './Pause';
-import Play from './Play';
+import Pause from '../src/Pause';
+import Play from '../src/Play';
 
 const game: Phaser.Types.Core.GameConfig = {
   backgroundColor: '#ccc',
@@ -22,17 +23,6 @@ const game: Phaser.Types.Core.GameConfig = {
   scene: [Play, Pause],
   seed: [uuidv4()],
 };
-
-export enum PlayerNames {
-  PUNK = 'punk',
-  CHAMP = 'champ',
-}
-
-export enum AnimationsNames {
-  FLY = 'fly',
-  WALK = 'walk',
-  JUMP = 'jump',
-}
 
 const players: {
   animations: { [key in AnimationsNames]: number[] };

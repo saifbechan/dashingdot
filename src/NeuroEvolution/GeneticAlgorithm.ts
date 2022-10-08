@@ -1,9 +1,9 @@
-import { EvolveableType } from './types';
+import { EvolveableType } from '../World/Player';
 import { Sequential, Tensor, tensor } from '@tensorflow/tfjs';
 import { clone, create } from './NeuralNetwork';
-import config from '../config';
+import config from '../../lib/config';
 import pickFromArray from '../../lib/pick-from-array';
-import utils from './utils';
+import randomGaussian from '../../lib/random-gaussian';
 
 export const populate = (populationSize: number): Sequential[] =>
   [...Array(populationSize)].map(() => create());
@@ -109,7 +109,7 @@ export const mutate = (population: EvolveableType[]): EvolveableType[] =>
       const shape = weight.shape.slice();
       const previousValues = weight.dataSync().slice();
       const newValues = previousValues.map((value: number) =>
-        Math.random() < config.evolution.mutationRate ? value + utils.randomGaussian() : value
+        Math.random() < config.evolution.mutationRate ? value + randomGaussian() : value
       );
       mutatedWeights.push(tensor(newValues, shape));
       weight.dispose();

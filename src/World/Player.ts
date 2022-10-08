@@ -1,11 +1,25 @@
-import { EvolveableType } from '../NeuroEvolution/types';
-import { PlaySceneType } from '../types';
+import { PlaySceneType } from '../Play';
 import { Sequential } from '@tensorflow/tfjs';
 import { predict } from '../NeuroEvolution/NeuralNetwork';
-import Phaser from 'phaser';
-import config, { PlayerNames } from '../config';
+import config from '../../lib/config';
 
-export default class Player extends Phaser.Physics.Arcade.Sprite {
+export enum PlayerNames {
+  PUNK = 'punk',
+  CHAMP = 'champ',
+}
+
+export enum AnimationsNames {
+  FLY = 'fly',
+  WALK = 'walk',
+  JUMP = 'jump',
+}
+
+export type EvolveableType = {
+  network: Sequential;
+  fitness: number;
+};
+
+class Player extends Phaser.Physics.Arcade.Sprite {
   private readonly brain: Sequential;
 
   private timeAlive = 0;
@@ -93,3 +107,5 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.alpha = alpha;
   };
 }
+
+export default Player;

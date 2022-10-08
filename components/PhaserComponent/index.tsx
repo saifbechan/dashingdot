@@ -1,7 +1,7 @@
 import { Game } from 'phaser';
 import { setBackend } from '@tensorflow/tfjs';
 import React, { useEffect, useRef } from 'react';
-import config from '../../src/config';
+import config from '../../lib/config';
 
 const PhaserComponent = (): JSX.Element => {
   setBackend('cpu').then();

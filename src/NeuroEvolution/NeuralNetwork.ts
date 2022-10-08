@@ -1,5 +1,5 @@
 import { Sequential, Tensor, layers, sequential, tensor2d, tidy } from '@tensorflow/tfjs';
-import config from '../config';
+import config from '../../lib/config';
 
 export const create = (): Sequential =>
   sequential({

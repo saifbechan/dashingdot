@@ -1,11 +1,21 @@
-import { PlayDataType } from './types';
+import { AnimationsNames, EvolveableType, PlayerNames } from './World/Player';
 import { memory } from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 import PlatformManager from './World/PlatformManager';
 import PlayerManager from './World/PlayerManager';
-import config, { AnimationsNames, PlayerNames } from './config';
+import config from '../lib/config';
 
-export default class Play extends Phaser.Scene {
+export type PlayDataType = {
+  generation: number;
+  playersData: EvolveableType[];
+};
+
+export type PlaySceneType = Phaser.Scene & {
+  platformManager: PlatformManager;
+  getArea: () => number[];
+};
+
+class Play extends Phaser.Scene {
   private generation!: number;
 
   private playerManager!: PlayerManager;
@@ -102,3 +112,5 @@ export default class Play extends Phaser.Scene {
 
   public getArea = (): number[] => this.area;
 }
+
+export default Play;

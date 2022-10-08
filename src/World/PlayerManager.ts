@@ -1,5 +1,4 @@
-import { EvolveableType } from '../NeuroEvolution/types';
-import { PlayDataType } from '../types';
+import { PlayDataType } from '../Play';
 import { Sequential } from '@tensorflow/tfjs';
 import {
   crossover,
@@ -11,8 +10,8 @@ import {
   speciate,
 } from '../NeuroEvolution/GeneticAlgorithm';
 import Phaser from 'phaser';
-import Player from './Player';
-import config from '../config';
+import Player, { EvolveableType } from './Player';
+import config from '../../lib/config';
 
 export default class PlayerManager extends Phaser.GameObjects.Group {
   private readonly playersData: EvolveableType[] = [];
