@@ -1,4 +1,11 @@
-import { Sequential, Tensor, layers, sequential, tensor2d, tidy } from '@tensorflow/tfjs';
+import {
+  Sequential,
+  Tensor,
+  layers,
+  sequential,
+  tensor2d,
+  tidy,
+} from '@tensorflow/tfjs';
 import config from '../../lib/config';
 
 export const create = (): Sequential =>

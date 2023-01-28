@@ -10,7 +10,8 @@ export const populate = (populationSize: number): Sequential[] =>
 
 export const evaluate = (population: EvolveableType[]): EvolveableType[] =>
   population.sort(
-    (networkX: EvolveableType, networkY: EvolveableType) => networkY.fitness - networkX.fitness
+    (networkX: EvolveableType, networkY: EvolveableType) =>
+      networkY.fitness - networkX.fitness
   );
 
 export const speciate = (population: EvolveableType[]): EvolveableType[] => {
@@ -32,8 +33,9 @@ export const speciate = (population: EvolveableType[]): EvolveableType[] => {
   );
 
   const avarageNormalizedFitnessScore: number =
-    normalizedFitnessScores.reduce((total: number, score: number) => (total += score)) /
-    normalizedFitnessScores.length;
+    normalizedFitnessScores.reduce(
+      (total: number, score: number) => (total += score)
+    ) / normalizedFitnessScores.length;
 
   population.forEach((player: EvolveableType, index: number) => {
     if (normalizedFitnessScores[index] < avarageNormalizedFitnessScore) return;
@@ -64,7 +66,8 @@ export const select = (population: EvolveableType[]): EvolveableType[] => {
 
 export const crossover = (population: EvolveableType[]): EvolveableType[] => {
   const crossed: EvolveableType[] = [];
-  const playersToCreate = (1 - config.evolution.survivalRate) * config.playerCount;
+  const playersToCreate =
+    (1 - config.evolution.survivalRate) * config.playerCount;
 
   for (let i = 0; i < playersToCreate; i++) {
     const weights: Tensor[] = [];
@@ -109,7 +112,9 @@ export const mutate = (population: EvolveableType[]): EvolveableType[] =>
       const shape = weight.shape.slice();
       const previousValues = weight.dataSync().slice();
       const newValues = previousValues.map((value: number) =>
-        Math.random() < config.evolution.mutationRate ? value + randomGaussian() : value
+        Math.random() < config.evolution.mutationRate
+          ? value + randomGaussian()
+          : value
       );
       mutatedWeights.push(tensor(newValues, shape));
       weight.dispose();
@@ -122,5 +127,10 @@ export const mutate = (population: EvolveableType[]): EvolveableType[] =>
     return <EvolveableType>{ network: newNetwork };
   });
 
-export const repopulate = (populationSize: number, population: EvolveableType[]): Sequential[] =>
-  [...Array(populationSize)].map((_, index) => population[index]?.network || create());
+export const repopulate = (
+  populationSize: number,
+  population: EvolveableType[]
+): Sequential[] =>
+  [...Array(populationSize)].map(
+    (_, index) => population[index]?.network || create()
+  );

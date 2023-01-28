@@ -1,4 +1,4 @@
-import { AnimationsNames, PlayerNames } from '../src/World/Player';
+import { AnimationsNames, MobNames, PlayerNames } from './constants';
 import { v4 as uuidv4 } from 'uuid';
 import Pause from '../src/Pause';
 import Play from '../src/Play';
@@ -28,8 +28,20 @@ const players: {
   animations: { [key in AnimationsNames]: number[] };
   offset: { [key in PlayerNames]: number };
 } = {
-  animations: { fly: [0, 1, 2, 3], walk: [0, 1, 2, 3, 4, 5, 6, 7], jump: [0, 1, 2] },
+  animations: {
+    fly: [0, 1, 2, 3],
+    walk: [0, 1, 2, 3, 4, 5, 6, 7],
+    jump: [0, 1, 2],
+  },
   offset: { punk: 50, champ: 32 },
+};
+
+const mobs: {
+  animations: { [AnimationsNames.FLY]: number[] };
+  offset: { [key in MobNames]: number };
+} = {
+  animations: { fly: [0, 1, 2, 3] },
+  offset: { crusher: 0 },
 };
 
 const config = {
@@ -38,9 +50,10 @@ const config = {
   platformStartSpeed: 350,
   platformSpeedThreshold: 500,
 
+  gravity: 900,
+
   spawnRange: [100, 200],
   platformSizeRange: [150, 300],
-  playerGravity: 900,
   jumpForce: 400,
   playerStartPosition: 200,
   allowedJumps: 1,
@@ -62,6 +75,8 @@ const config = {
   game,
 
   players,
+
+  mobs,
 };
 
 export default config;

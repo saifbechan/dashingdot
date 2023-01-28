@@ -9,7 +9,6 @@ import {
   select,
   speciate,
 } from '../NeuroEvolution/GeneticAlgorithm';
-import Phaser from 'phaser';
 import Player, { EvolveableType } from './Player';
 import config from '../../lib/config';
 
@@ -32,27 +31,31 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
       const crossed = crossover(speciated);
       const mutated = mutate(crossed);
 
-      repopulate(config.playerCount, [...selected, ...mutated]).forEach((brain: Sequential) => {
-        this.add(new Player(scene, 200, scene.scale.height / 2, brain));
-      });
+      repopulate(config.playerCount, [...selected, ...mutated]).forEach(
+        (brain: Sequential) => {
+          this.add(new Player(scene, 200, scene.scale.height / 2, brain));
+        }
+      );
 
       playersData.forEach(({ network }) => network.dispose());
     }
   }
 
   update = (): void => {
-    this.getChildren().forEach((child: Phaser.GameObjects.GameObject, index: number) => {
-      const player = child as Player;
+    this.getChildren().forEach(
+      (child: Phaser.GameObjects.GameObject, index: number) => {
+        const player = child as Player;
 
-      player.setTransparency(index > 0 ? 0.3 : 1);
+        player.setTransparency(index > 0 ? 0.3 : 1);
 
-      if (player.y < this.scene.scale.height - 50) return;
+        if (player.y < this.scene.scale.height - 50) return;
 
-      this.playersData.push(player.getPlayersData());
+        this.playersData.push(player.getPlayersData());
 
-      this.killAndHide(player);
-      this.remove(player, true, true);
-    });
+        this.killAndHide(player);
+        this.remove(player, true, true);
+      }
+    );
   };
 
   getPlayersData = (): PlayDataType =>

@@ -1,6 +1,5 @@
 {
   "parser": "@typescript-eslint/parser",
-
   "plugins": ["@typescript-eslint", "sort-imports-es6-autofix", "unused-imports", "prettier"],
   "extends": [
     "next/core-web-vitals",

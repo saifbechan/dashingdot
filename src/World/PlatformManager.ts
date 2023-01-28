@@ -66,7 +66,8 @@ export default class PlatformManager {
     let minDistance = this.scene.scale.width;
     this.group.getChildren().forEach((child) => {
       const platform = child as Phaser.Physics.Arcade.Sprite;
-      const platformDistance = this.scene.scale.width - platform.x - platform.displayWidth / 2;
+      const platformDistance =
+        this.scene.scale.width - platform.x - platform.displayWidth / 2;
 
       minDistance = Math.min(minDistance, platformDistance);
 
@@ -87,7 +88,10 @@ export default class PlatformManager {
         config.platformSizeRange[0],
         config.platformSizeRange[1]
       );
-      this.addPlatform(nextPlatformWidth, this.scene.scale.width + nextPlatformWidth / 2);
+      this.addPlatform(
+        nextPlatformWidth,
+        this.scene.scale.width + nextPlatformWidth / 2
+      );
     }
   };
 
@@ -109,7 +113,10 @@ export default class PlatformManager {
       this.group.add(platform);
     }
     platform.displayWidth = platformWidth;
-    this.nextPlatformDistance = this.rnd.between(config.spawnRange[0], config.spawnRange[1]);
+    this.nextPlatformDistance = this.rnd.between(
+      config.spawnRange[0],
+      config.spawnRange[1]
+    );
   };
 
   getGroup = (): Phaser.GameObjects.Group => this.group;

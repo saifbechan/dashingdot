@@ -1,18 +1,8 @@
 import { PlaySceneType } from '../Play';
+import { PlayerNames } from '../../lib/constants';
 import { Sequential } from '@tensorflow/tfjs';
 import { predict } from '../NeuroEvolution/NeuralNetwork';
 import config from '../../lib/config';
-
-export enum PlayerNames {
-  PUNK = 'punk',
-  CHAMP = 'champ',
-}
-
-export enum AnimationsNames {
-  FLY = 'fly',
-  WALK = 'walk',
-  JUMP = 'jump',
-}
 
 export type EvolveableType = {
   network: Sequential;
@@ -37,7 +27,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.setName(name);
 
     const {
-      playerGravity,
+      gravity,
       players: { animations, offset },
     } = config;
 
@@ -48,19 +38,21 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.setScale(0.5);
     this.setSize(85, 85);
-    this.setGravityY(playerGravity);
+    this.setGravityY(gravity);
     this.setOffset(offset[name]);
 
-    (Object.keys(animations) as Array<keyof typeof animations>).forEach((key) => {
-      this.anims.create({
-        key,
-        frames: this.anims.generateFrameNumbers(`${name}-${key}`, {
-          frames: animations[key],
-        }),
-        frameRate: 16,
-        repeat: -1,
-      });
-    });
+    (Object.keys(animations) as Array<keyof typeof animations>).forEach(
+      (key) => {
+        this.anims.create({
+          key,
+          frames: this.anims.generateFrameNumbers(`${name}-${key}`, {
+            frames: animations[key],
+          }),
+          frameRate: 16,
+          repeat: -1,
+        });
+      }
+    );
   }
 
   preUpdate = (time: number, delta: number): void => {
@@ -88,7 +80,10 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 
   private shouldJump = (): boolean => {
     if ((<PlaySceneType>this.scene).getArea().length === 0) return false;
-    const prediction = predict(this.brain, this.getInputs(<PlaySceneType>this.scene));
+    const prediction = predict(
+      this.brain,
+      this.getInputs(<PlaySceneType>this.scene)
+    );
     return prediction[0] > prediction[1];
   };
 

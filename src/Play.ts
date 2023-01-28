@@ -1,5 +1,7 @@
-import { AnimationsNames, EvolveableType, PlayerNames } from './World/Player';
+import { AnimationsNames, MobNames, PlayerNames } from '../lib/constants';
+import { EvolveableType } from './World/Player';
 import { memory } from '@tensorflow/tfjs';
+import MobManager from './World/MobManager';
 import Phaser from 'phaser';
 import PlatformManager from './World/PlatformManager';
 import PlayerManager from './World/PlayerManager';
@@ -18,8 +20,9 @@ export type PlaySceneType = Phaser.Scene & {
 class Play extends Phaser.Scene {
   private generation!: number;
 
-  private playerManager!: PlayerManager;
   private platformManager!: PlatformManager;
+  private playerManager!: PlayerManager;
+  private mobManager!: MobManager;
 
   private playerCountText!: Phaser.GameObjects.Text;
 
@@ -45,10 +48,15 @@ class Play extends Phaser.Scene {
     this.add.image(width * 0.5, height * 0.4, 'back').setScrollFactor(0);
     this.add.image(width * 0.5, height * 0.5, 'front').setScrollFactor(0.25);
 
-    this.playerManager = new PlayerManager(this, playersData);
     this.platformManager = new PlatformManager(this);
+    this.playerManager = new PlayerManager(this, playersData);
 
-    this.physics.add.collider(this.playerManager, this.platformManager.getGroup());
+    new MobManager(this);
+
+    this.physics.add.collider(
+      this.platformManager.getGroup(),
+      this.playerManager
+    );
 
     this.scene.launch('Pause');
     this.input?.keyboard?.on('keydown-P', () => {
@@ -59,7 +67,13 @@ class Play extends Phaser.Scene {
     if (config.showGuides) {
       config.guides.forEach((guide) =>
         this.add
-          .rectangle(guide[0], this.scale.height * 0.8, guide[1], guide[2], 0x6666ff)
+          .rectangle(
+            guide[0],
+            this.scale.height * 0.8,
+            guide[1],
+            guide[2],
+            0x6666ff
+          )
           .setOrigin(0)
       );
     }
@@ -77,15 +91,22 @@ class Play extends Phaser.Scene {
     if (context !== null) {
       config.guides.forEach((guide) =>
         this.area.push(
-          ...context.getImageData(guide[0], this.scale.height * 0.8, guide[1], guide[2]).data
+          ...context.getImageData(
+            guide[0],
+            this.scale.height * 0.8,
+            guide[1],
+            guide[2]
+          ).data
         )
       );
     }
 
-    this.playerManager.update();
     this.platformManager.update();
+    this.playerManager.update();
 
-    this.playerCountText.setText(`Active players: ${this.playerManager.getChildren().length}`);
+    this.playerCountText.setText(
+      `Active players: ${this.playerManager.getChildren().length}`
+    );
 
     if (this.playerManager.countActive() === 0) {
       this.scene.start('Play', <PlayDataType>{
@@ -102,11 +123,27 @@ class Play extends Phaser.Scene {
 
     Object.values(PlayerNames).forEach((name) => {
       Object.values(AnimationsNames).forEach((animation) => {
-        this.load.spritesheet(`${name}-${animation}`, `images/players/${name}-${animation}.png`, {
-          frameWidth: 150,
-          frameHeight: 150,
-        });
+        this.load.spritesheet(
+          `${name}-${animation}`,
+          `images/players/${name}-${animation}.png`,
+          {
+            frameWidth: 150,
+            frameHeight: 150,
+          }
+        );
       });
+    });
+
+    Object.values(MobNames).forEach((name) => {
+      console.log(`${name}-${AnimationsNames.FLY}`);
+      this.load.spritesheet(
+        `${name}-${AnimationsNames.FLY}`,
+        `images/mobs/${name}-${AnimationsNames.FLY}.png`,
+        {
+          frameWidth: 250,
+          frameHeight: 141,
+        }
+      );
     });
   };
 
