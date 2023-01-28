@@ -51,7 +51,7 @@ class Play extends Phaser.Scene {
     this.physics.add.collider(this.playerManager, this.platformManager.getGroup());
 
     this.scene.launch('Pause');
-    this.input.keyboard.on('keydown-P', () => {
+    this.input?.keyboard?.on('keydown-P', () => {
       this.scene.pause('Play');
       this.scene.resume('Pause');
     });

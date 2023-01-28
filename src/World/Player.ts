@@ -66,6 +66,10 @@ class Player extends Phaser.Physics.Arcade.Sprite {
   preUpdate = (time: number, delta: number): void => {
     super.preUpdate(time, delta);
 
+    if (!this.body) {
+      throw new Error('Empty body');
+    }
+
     this.timeAlive += 1;
     this.x = config.playerStartPosition;
 
@@ -88,12 +92,17 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     return prediction[0] > prediction[1];
   };
 
-  private getInputs = (scene: PlaySceneType): number[] => [
-    this.body.position.x / scene.scale.width,
-    this.body.position.y / this.scene.scale.height,
-    this.body.velocity.y / 10,
-    ...scene.getArea(),
-  ];
+  private getInputs = (scene: PlaySceneType): number[] => {
+    if (!this.body || !this.body?.position.x || !this.body?.position.y) {
+      throw new Error('Empty body');
+    }
+    return [
+      this.body.position.x / scene.scale.width,
+      this.body.position.y / this.scene.scale.height,
+      this.body.velocity.y / 10,
+      ...scene.getArea(),
+    ];
+  };
 
   getPlayersData = (): EvolveableType =>
     <EvolveableType>{
