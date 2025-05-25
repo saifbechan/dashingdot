@@ -9,7 +9,7 @@ const config: PlaywrightTestConfig = {
 
   webServer: process.env.PREPUSH
     ? {
-        command: 'yarn start -p 3030',
+        command: 'npm run start -- -p 3030',
         port: process.env.PREPUSH ? 3030 : 3000,
         timeout: 120 * 1000,
         reuseExistingServer: !process.env.PREPUSH,

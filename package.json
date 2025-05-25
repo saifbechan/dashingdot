@@ -16,9 +16,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@chakra-ui/react": "2.4.9",
     "@tensorflow/tfjs": "4.2.0",
-    "framer-motion": "^8.5.4",
     "next": "13.1.5",
     "phaser": "3.60.0-beta.10",
     "react": "18.2.0",
@@ -39,8 +37,6 @@
     "eslint-config-next": "13.1.5",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "eslint-plugin-sort-imports-es6-autofix": "^0.6.0",
-    "eslint-plugin-unused-imports": "^2.0.0",
     "husky": "^8.0.3",
     "jsdom": "^21.1.0",
     "lint-staged": "^13.1.0",
@@ -52,6 +48,6 @@
     "vitest-canvas-mock": "^0.2.2"
   },
   "engines": {
-    "node": "^18"
+    "node": "22"
   }
 }
