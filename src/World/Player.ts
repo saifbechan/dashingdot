@@ -84,7 +84,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
       this.brain,
       this.getInputs(<PlaySceneType>this.scene)
     );
-    return prediction[0] > prediction[1];
+    return (prediction[0] ?? 0) > (prediction[1] ?? 0);
   };
 
   private getInputs = (scene: PlaySceneType): number[] => {

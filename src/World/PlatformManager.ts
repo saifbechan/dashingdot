@@ -85,8 +85,8 @@ export default class PlatformManager {
 
     if (minDistance > this.nextPlatformDistance) {
       const nextPlatformWidth = this.rnd.between(
-        config.platformSizeRange[0],
-        config.platformSizeRange[1]
+        config.platformSizeRange[0] ?? 50,
+        config.platformSizeRange[1] ?? 100
       );
       this.addPlatform(
         nextPlatformWidth,
@@ -114,8 +114,8 @@ export default class PlatformManager {
     }
     platform.displayWidth = platformWidth;
     this.nextPlatformDistance = this.rnd.between(
-      config.spawnRange[0],
-      config.spawnRange[1]
+      config.spawnRange[0] ?? 100,
+      config.spawnRange[1] ?? 200
     );
   };
 

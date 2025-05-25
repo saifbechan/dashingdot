@@ -1,5 +1,5 @@
 import NextDocument, { Head, Html, Main, NextScript } from 'next/document';
-import React from 'react';
+import React, { type JSX } from 'react';
 
 type Props = {
   lang: string;

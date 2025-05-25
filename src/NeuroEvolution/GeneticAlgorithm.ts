@@ -38,9 +38,10 @@ export const speciate = (population: EvolveableType[]): EvolveableType[] => {
     ) / normalizedFitnessScores.length;
 
   population.forEach((player: EvolveableType, index: number) => {
-    if (normalizedFitnessScores[index] < avarageNormalizedFitnessScore) return;
+    const score = normalizedFitnessScores[index];
+    if (score === undefined || score < avarageNormalizedFitnessScore) return;
 
-    for (let i = 0; i < normalizedFitnessScores[index]; i += 1) {
+    for (let i = 0; i < score; i += 1) {
       speciated.push(player);
     }
   });
@@ -72,25 +73,33 @@ export const crossover = (population: EvolveableType[]): EvolveableType[] => {
   for (let i = 0; i < playersToCreate; i++) {
     const weights: Tensor[] = [];
 
-    const weightsX = pickFromArray(population).network.getWeights();
-    const weightsY = pickFromArray(population).network.getWeights();
+    const playerX = pickFromArray(population);
+    const playerY = pickFromArray(population);
+    const weightsX = playerX?.network.getWeights() ?? [];
+    const weightsY = playerY?.network.getWeights() ?? [];
 
     for (let j = 0; j < weightsX.length; j++) {
-      const values = [];
-      const shape = weightsX[j].shape.slice();
+      const values: (number | undefined)[] = [];
+      const shape = weightsX[j]?.shape?.slice();
 
-      const valuesX = weightsX[j].dataSync().slice();
-      const valuesY = weightsY[j].dataSync().slice();
+      const valuesX = weightsX[j]?.dataSync()?.slice();
+      const valuesY = weightsY[j]?.dataSync()?.slice();
 
-      for (let k = 0; k < valuesX.length; k++) {
-        if (Math.random() < 0.5) {
-          values[k] = valuesX[k];
-        } else {
-          values[k] = valuesY[k];
+      if (valuesX && valuesY) {
+        for (let k = 0; k < valuesX.length; k++) {
+          if (Math.random() < 0.5) {
+            values[k] = valuesX[k];
+          } else {
+            values[k] = valuesY[k];
+          }
         }
       }
-
-      weights[j] = tensor(values, shape);
+      if (shape && values) {
+        const tensorValues = values.filter(
+          (value): value is number => value !== undefined
+        );
+        weights[j] = tensor(tensorValues, shape);
+      }
     }
 
     const brain = create();

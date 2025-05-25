@@ -1,12 +1,12 @@
 import { Game } from 'phaser';
 import { setBackend } from '@tensorflow/tfjs';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, type JSX } from 'react';
 import config from '../../lib/config';
 
 const PhaserComponent = (): JSX.Element => {
   setBackend('cpu').then();
 
-  const phaserRef = useRef<Game>();
+  const phaserRef = useRef<Game>(undefined);
   const canvasRef = useRef<HTMLElement>(null);
 
   useEffect(() => {

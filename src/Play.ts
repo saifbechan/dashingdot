@@ -65,17 +65,19 @@ class Play extends Phaser.Scene {
     });
 
     if (config.showGuides) {
-      config.guides.forEach((guide) =>
-        this.add
-          .rectangle(
-            guide[0],
-            this.scale.height * 0.8,
-            guide[1],
-            guide[2],
-            0x6666ff
-          )
-          .setOrigin(0)
-      );
+      config.guides.forEach((guide: number[]) => {
+        if (guide && guide.length === 3) {
+          this.add
+            .rectangle(
+              guide[0],
+              this.scale.height * 0.8,
+              guide[1],
+              guide[2],
+              0x6666ff
+            )
+            .setOrigin(0);
+        }
+      });
     }
 
     this.playerCountText = this.add.text(
@@ -92,10 +94,10 @@ class Play extends Phaser.Scene {
       config.guides.forEach((guide) =>
         this.area.push(
           ...context.getImageData(
-            guide[0],
+            guide[0] || 0,
             this.scale.height * 0.8,
-            guide[1],
-            guide[2]
+            guide[1] || 0,
+            guide[2] || 0
           ).data
         )
       );
