@@ -1,12 +1,12 @@
+import config from '@/lib/config';
 import {
-  Sequential,
-  Tensor,
+  type Sequential,
+  type Tensor,
   layers,
   sequential,
   tensor2d,
   tidy,
 } from '@tensorflow/tfjs';
-import config from '../../lib/config';
 
 export const create = (): Sequential =>
   sequential({
@@ -31,10 +31,10 @@ export const clone = (network: Sequential): Sequential => {
 
 export const predict = (
   network: Sequential,
-  inputs: number[]
+  inputs: number[],
 ): Uint8Array | Int32Array | Float32Array =>
   tidy(() => {
     const xs = tensor2d([inputs]);
-    const ys = <Tensor>network.predict(xs);
+    const ys = network.predict(xs) as Tensor;
     return ys.dataSync();
   });

@@ -1,0 +1,69 @@
+name: CI/CD [main]
+
+env:
+  CI: true
+on:
+  push:
+    branches: [main]
+
+jobs:
+  commit-check:
+    runs-on: ubuntu-latest
+    name: Commit Lint & Unit Tests 🛡️
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Check commit message
+        uses: wagoid/commitlint-github-action@v6
+      - name: Run unit tests
+        run: npm run test:ci
+
+  # For main, we assume Vercel auto-deploys to Production. 
+  # We wait for that deployment and then run E2E tests against Production.
+  e2e-production:
+    needs: commit-check
+    runs-on: ubuntu-latest
+    name: Vercel Prod & E2E 🌎
+    steps:
+      - uses: actions/checkout@v4
+      - name: WaitFor Vercel Production
+        uses: patrickedqvist/wait-for-vercel-preview@v1.3.1
+        id: waitForVercel
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          max_timeout: 300
+          # We ideally want to check for 'production' enviroment, 
+          # but this action finds the deployment associated with the commit.
+          # If main auto-deploys to prod, the commit deployment will be prod.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")" >> $GITHUB_OUTPUT
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps
+      - name: Run E2E Tests on Prod
+        run: npm run test:e2e
+        env:
+          BASE_URL: ${{ steps.waitForVercel.outputs.url }}

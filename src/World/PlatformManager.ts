@@ -1,6 +1,6 @@
-import { PlaySceneType } from '../Play';
+import config from '@/lib/config';
 import Phaser from 'phaser';
-import config from '../../lib/config';
+import { type PlaySceneType } from '../Play';
 
 export default class PlatformManager {
   private scene: Phaser.Scene;
@@ -49,15 +49,16 @@ export default class PlatformManager {
   };
 
   getNthPlatformBounds = (nth: number): number[] => {
-    const platform = this.group.getFirstNth(nth, true);
-    return platform
-      ? [
-          platform.getTopLeft().x / this.scene.scale.width,
-          platform.getTopLeft().y / this.scene.scale.height,
-          platform.getTopRight().x / this.scene.scale.width,
-          platform.getTopRight().y / this.scene.scale.height,
-        ]
-      : [0, 0, 0, 0];
+    const platform = this.group.getFirstNth(
+      nth,
+      true,
+    ) as Phaser.Physics.Arcade.Sprite;
+    return [
+      platform.getTopLeft().x / this.scene.scale.width,
+      platform.getTopLeft().y / this.scene.scale.height,
+      platform.getTopRight().x / this.scene.scale.width,
+      platform.getTopRight().y / this.scene.scale.height,
+    ];
   };
 
   update = (): void => {
@@ -86,19 +87,19 @@ export default class PlatformManager {
     if (minDistance > this.nextPlatformDistance) {
       const nextPlatformWidth = this.rnd.between(
         config.platformSizeRange[0] ?? 50,
-        config.platformSizeRange[1] ?? 100
+        config.platformSizeRange[1] ?? 100,
       );
       this.addPlatform(
         nextPlatformWidth,
-        this.scene.scale.width + nextPlatformWidth / 2
+        this.scene.scale.width + nextPlatformWidth / 2,
       );
     }
   };
 
   private addPlatform = (platformWidth: number, posX: number): void => {
-    let platform;
+    let platform: Phaser.Physics.Arcade.Sprite;
     if (this.pool.getLength()) {
-      platform = this.pool.getFirst();
+      platform = this.pool.getFirst() as Phaser.Physics.Arcade.Sprite;
       platform.x = posX;
       platform.active = true;
       platform.visible = true;
@@ -115,7 +116,7 @@ export default class PlatformManager {
     platform.displayWidth = platformWidth;
     this.nextPlatformDistance = this.rnd.between(
       config.spawnRange[0] ?? 100,
-      config.spawnRange[1] ?? 200
+      config.spawnRange[1] ?? 200,
     );
   };
 

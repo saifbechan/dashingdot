@@ -1,7 +1,11 @@
-import { AnimationsNames, MobNames, PlayerNames } from './constants';
+import Pause from '@/Pause';
+import Play from '@/Play';
 import { v4 as uuidv4 } from 'uuid';
-import Pause from '../src/Pause';
-import Play from '../src/Play';
+import {
+  type AnimationsNames,
+  type MobNames,
+  type PlayerNames,
+} from './constants';
 
 const game: Phaser.Types.Core.GameConfig = {
   backgroundColor: '#ccc',
@@ -25,8 +29,8 @@ const game: Phaser.Types.Core.GameConfig = {
 };
 
 const players: {
-  animations: { [key in AnimationsNames]: number[] };
-  offset: { [key in PlayerNames]: number };
+  animations: Record<AnimationsNames, number[]>;
+  offset: Record<PlayerNames, number>;
 } = {
   animations: {
     fly: [0, 1, 2, 3],
@@ -38,7 +42,7 @@ const players: {
 
 const mobs: {
   animations: { [AnimationsNames.FLY]: number[] };
-  offset: { [key in MobNames]: number };
+  offset: Record<MobNames, number>;
 } = {
   animations: { fly: [0, 1, 2, 3] },
   offset: { crusher: 0 },

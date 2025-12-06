@@ -1,5 +1,5 @@
-import { PlayDataType } from '../Play';
-import { Sequential } from '@tensorflow/tfjs';
+import config from '@/lib/config';
+import { type Sequential } from '@tensorflow/tfjs';
 import {
   crossover,
   evaluate,
@@ -9,8 +9,8 @@ import {
   select,
   speciate,
 } from '../NeuroEvolution/GeneticAlgorithm';
-import Player, { EvolveableType } from './Player';
-import config from '../../lib/config';
+import { type PlayDataType } from '../Play';
+import Player, { type EvolveableType } from './Player';
 
 export default class PlayerManager extends Phaser.GameObjects.Group {
   private readonly playersData: EvolveableType[] = [];
@@ -34,7 +34,7 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
       repopulate(config.playerCount, [...selected, ...mutated]).forEach(
         (brain: Sequential) => {
           this.add(new Player(scene, 200, scene.scale.height / 2, brain));
-        }
+        },
       );
 
       playersData.forEach(({ network }) => network.dispose());
@@ -54,12 +54,12 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
 
         this.killAndHide(player);
         this.remove(player, true, true);
-      }
+      },
     );
   };
 
   getPlayersData = (): PlayDataType =>
-    <PlayDataType>{
+    ({
       playersData: this.playersData,
-    };
+    }) as PlayDataType;
 }

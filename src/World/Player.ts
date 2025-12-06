@@ -1,13 +1,14 @@
-import { PlaySceneType } from '../Play';
-import { PlayerNames } from '../../lib/constants';
-import { Sequential } from '@tensorflow/tfjs';
+import config from '@/lib/config';
+import { PlayerNames } from '@/lib/constants';
+import { type Sequential } from '@tensorflow/tfjs';
+import Phaser from 'phaser';
 import { predict } from '../NeuroEvolution/NeuralNetwork';
-import config from '../../lib/config';
+import { type PlaySceneType } from '../Play';
 
-export type EvolveableType = {
+export interface EvolveableType {
   network: Sequential;
   fitness: number;
-};
+}
 
 class Player extends Phaser.Physics.Arcade.Sprite {
   private readonly brain: Sequential;
@@ -20,7 +21,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     x: number,
     y: number,
     brain: Sequential,
-    name: PlayerNames = PlayerNames.PUNK
+    name: PlayerNames = PlayerNames.PUNK,
   ) {
     super(scene, x, y, name);
 
@@ -41,18 +42,16 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.setGravityY(gravity);
     this.setOffset(offset[name]);
 
-    (Object.keys(animations) as Array<keyof typeof animations>).forEach(
-      (key) => {
-        this.anims.create({
-          key,
-          frames: this.anims.generateFrameNumbers(`${name}-${key}`, {
-            frames: animations[key],
-          }),
-          frameRate: 16,
-          repeat: -1,
-        });
-      }
-    );
+    (Object.keys(animations) as (keyof typeof animations)[]).forEach((key) => {
+      this.anims.create({
+        key: key as string,
+        frames: this.anims.generateFrameNumbers(`${name}-${key}`, {
+          frames: animations[key],
+        }),
+        frameRate: 16,
+        repeat: -1,
+      });
+    });
   }
 
   preUpdate = (time: number, delta: number): void => {
@@ -79,16 +78,16 @@ class Player extends Phaser.Physics.Arcade.Sprite {
   };
 
   private shouldJump = (): boolean => {
-    if ((<PlaySceneType>this.scene).getArea().length === 0) return false;
+    if ((this.scene as PlaySceneType).getArea().length === 0) return false;
     const prediction = predict(
       this.brain,
-      this.getInputs(<PlaySceneType>this.scene)
+      this.getInputs(this.scene as PlaySceneType),
     );
-    return (prediction[0] ?? 0) > (prediction[1] ?? 0);
+    return prediction[0] > prediction[1];
   };
 
   private getInputs = (scene: PlaySceneType): number[] => {
-    if (!this.body || !this.body?.position.x || !this.body?.position.y) {
+    if (!this.body?.position.x || !this.body.position.y) {
       throw new Error('Empty body');
     }
     return [
@@ -100,12 +99,12 @@ class Player extends Phaser.Physics.Arcade.Sprite {
   };
 
   getPlayersData = (): EvolveableType =>
-    <EvolveableType>{
+    ({
       network: this.brain,
       fitness: this.timeAlive + this.totalSteps,
       timeAlive: this.timeAlive,
       totalSteps: this.totalSteps,
-    };
+    }) as EvolveableType;
 
   setTransparency = (alpha: number): void => {
     this.alpha = alpha;

@@ -7,9 +7,11 @@ export default class Pause extends Phaser.Scene {
 
   create = (): void => {
     this.scene.pause('Pause');
-    this.input?.keyboard?.on('keydown-P', () => {
-      this.scene.pause('Pause');
-      this.scene.resume('Play');
-    });
+    if (this.input.keyboard) {
+      this.input.keyboard.on('keydown-P', () => {
+        this.scene.pause('Pause');
+        this.scene.resume('Play');
+      });
+    }
   };
 }

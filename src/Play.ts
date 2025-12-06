@@ -1,16 +1,16 @@
-import { AnimationsNames, MobNames, PlayerNames } from '../lib/constants';
-import { EvolveableType } from './World/Player';
+import config from '@/lib/config';
+import { AnimationsNames, MobNames, PlayerNames } from '@/lib/constants';
 import { memory } from '@tensorflow/tfjs';
-import MobManager from './World/MobManager';
 import Phaser from 'phaser';
+import MobManager from './World/MobManager';
 import PlatformManager from './World/PlatformManager';
+import { type EvolveableType } from './World/Player';
 import PlayerManager from './World/PlayerManager';
-import config from '../lib/config';
 
-export type PlayDataType = {
+export interface PlayDataType {
   generation: number;
   playersData: EvolveableType[];
-};
+}
 
 export type PlaySceneType = Phaser.Scene & {
   platformManager: PlatformManager;
@@ -32,16 +32,16 @@ class Play extends Phaser.Scene {
     super('Play');
   }
 
-  init = ({ generation = 1 }: PlayDataType): void => {
+  init = ({ generation = 1 }: Partial<PlayDataType> = {}): void => {
     this.generation = generation;
 
     console.table({
       generation,
-      tensors: memory().numTensors,
+      tensors: (memory() as unknown as { numTensors: number }).numTensors,
     });
   };
 
-  create = ({ playersData = [] }: PlayDataType) => {
+  create = ({ playersData = [] }: Partial<PlayDataType> = {}) => {
     const width = this.scale.width;
     const height = this.scale.height;
 
@@ -55,25 +55,27 @@ class Play extends Phaser.Scene {
 
     this.physics.add.collider(
       this.platformManager.getGroup(),
-      this.playerManager
+      this.playerManager,
     );
 
     this.scene.launch('Pause');
-    this.input?.keyboard?.on('keydown-P', () => {
-      this.scene.pause('Play');
-      this.scene.resume('Pause');
-    });
+    if (this.input.keyboard) {
+      this.input.keyboard.on('keydown-P', () => {
+        this.scene.pause('Play');
+        this.scene.resume('Pause');
+      });
+    }
 
     if (config.showGuides) {
       config.guides.forEach((guide: number[]) => {
-        if (guide && guide.length === 3) {
+        if (guide.length === 3) {
           this.add
             .rectangle(
               guide[0],
               this.scale.height * 0.8,
               guide[1],
               guide[2],
-              0x6666ff
+              0x6666ff,
             )
             .setOrigin(0);
         }
@@ -83,7 +85,7 @@ class Play extends Phaser.Scene {
     this.playerCountText = this.add.text(
       10,
       10,
-      `Active players: ${this.playerManager.getChildren().length}`
+      `Active players: ${String(this.playerManager.getChildren().length)}`,
     );
   };
 
@@ -93,13 +95,15 @@ class Play extends Phaser.Scene {
     if (context !== null) {
       config.guides.forEach((guide) =>
         this.area.push(
-          ...context.getImageData(
-            guide[0] || 0,
-            this.scale.height * 0.8,
-            guide[1] || 0,
-            guide[2] || 0
-          ).data
-        )
+          ...Array.from(
+            context.getImageData(
+              guide[0] || 0,
+              this.scale.height * 0.8,
+              guide[1] || 0,
+              guide[2] || 0,
+            ).data,
+          ),
+        ),
       );
     }
 
@@ -107,14 +111,14 @@ class Play extends Phaser.Scene {
     this.playerManager.update();
 
     this.playerCountText.setText(
-      `Active players: ${this.playerManager.getChildren().length}`
+      `Active players: ${String(this.playerManager.getChildren().length)}`,
     );
 
     if (this.playerManager.countActive() === 0) {
-      this.scene.start('Play', <PlayDataType>{
+      this.scene.start('Play', {
         ...this.playerManager.getPlayersData(),
         generation: this.generation + 1,
-      });
+      } as PlayDataType);
     }
   };
 
@@ -131,7 +135,7 @@ class Play extends Phaser.Scene {
           {
             frameWidth: 150,
             frameHeight: 150,
-          }
+          },
         );
       });
     });
@@ -144,7 +148,7 @@ class Play extends Phaser.Scene {
         {
           frameWidth: 250,
           frameHeight: 141,
-        }
+        },
       );
     });
   };

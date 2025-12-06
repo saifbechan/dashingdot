@@ -1,4 +1,4 @@
-import { PlaywrightTestConfig, devices } from '@playwright/test';
+import { type PlaywrightTestConfig, devices } from '@playwright/test';
 import path from 'path';
 
 const config: PlaywrightTestConfig = {
@@ -19,7 +19,7 @@ const config: PlaywrightTestConfig = {
   use: {
     trace: 'retry-with-trace',
     baseURL:
-      process.env.BASE_URL ||
+      process.env.BASE_URL ??
       (process.env.PREPUSH ? 'http://localhost:3030' : 'http://localhost:3000'),
   },
 
