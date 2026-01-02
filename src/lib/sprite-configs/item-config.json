@@ -1,0 +1,26 @@
+[
+  {
+    "id": "coin",
+    "frameWidth": 56,
+    "frameHeight": 56,
+    "frames": 8,
+    "scale": 0.75,
+    "assetPath": "images/items/coin.png"
+  },
+  {
+    "id": "heal",
+    "frameWidth": 100,
+    "frameHeight": 100,
+    "frames": 4,
+    "scale": 0.75,
+    "assetPath": "images/items/heal.png"
+  },
+  {
+    "id": "powerup",
+    "frameWidth": 100,
+    "frameHeight": 100,
+    "frames": 4,
+    "scale": 0.65,
+    "assetPath": "images/items/powerup.png"
+  }
+]

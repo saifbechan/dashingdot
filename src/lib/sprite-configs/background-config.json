@@ -1,0 +1,35 @@
+[
+  {
+    "id": "neon-city",
+    "name": "Neon City",
+    "layers": [
+      { "image": "layer-1", "path": "/images/backgrounds/neon-city/layer-1.png", "scrollFactor": 0 },
+      { "image": "layer-2", "path": "/images/backgrounds/neon-city/layer-2.png", "scrollFactor": 0.25 }
+    ]
+  },
+  {
+    "id": "grid-sector",
+    "name": "Grid Sector",
+    "layers": [
+      { "image": "layer-1", "path": "/images/backgrounds/grid-sector/layer-1.png", "scrollFactor": 0 },
+      { "image": "layer-2", "path": "/images/backgrounds/grid-sector/layer-2.png", "scrollFactor": 0.25 }
+    ]
+  },
+  {
+    "id": "mainframe",
+    "name": "Mainframe",
+    "layers": [
+      { "image": "layer-1", "path": "/images/backgrounds/mainframe/layer-1.png", "scrollFactor": 0 },
+      { "image": "layer-2", "path": "/images/backgrounds/mainframe/layer-2.png", "scrollFactor": 0.25 },
+      { "image": "layer-3", "path": "/images/backgrounds/mainframe/layer-3.png", "scrollFactor": 0.5 }
+    ]
+  },
+  {
+    "id": "data-stream",
+    "name": "Data Stream",
+    "layers": [
+      { "image": "layer-1", "path": "/images/backgrounds/data-stream/layer-1.png", "scrollFactor": 0 },
+      { "image": "layer-2", "path": "/images/backgrounds/data-stream/layer-2.png", "scrollFactor": 0.25 }
+    ]
+  }
+]

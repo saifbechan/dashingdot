@@ -1,6 +1,8 @@
 import config from '@/lib/config';
+import { PlatformNames } from '@/lib/constants';
 import Phaser from 'phaser';
-import { type PlaySceneType } from '../Play';
+import type ItemManager from './ItemManager';
+import Platform from './Platform';
 
 export default class PlatformManager {
   private scene: Phaser.Scene;
@@ -13,29 +15,19 @@ export default class PlatformManager {
   private platformSpeed = 0;
 
   private step = 0;
+  private platformBag: PlatformNames[] = [];
+  private itemManager: ItemManager | undefined;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, seed: string[], itemManager?: ItemManager) {
     this.scene = scene;
+    this.itemManager = itemManager;
 
-    this.rnd = new Phaser.Math.RandomDataGenerator(config.game.seed);
+    this.rnd = new Phaser.Math.RandomDataGenerator(seed);
 
     this.platformSpeed = config.platformStartSpeed * -1;
 
-    this.group = scene.add.group({
-      removeCallback: (child) => {
-        const platform = child as Phaser.Physics.Arcade.Sprite;
-        const scene = platform.scene as PlaySceneType;
-        scene.platformManager.addToPool(platform);
-      },
-    });
-
-    this.pool = scene.add.group({
-      removeCallback: (child) => {
-        const platform = child as Phaser.Physics.Arcade.Sprite;
-        const scene = platform.scene as PlaySceneType;
-        scene.platformManager.addToGroup(platform);
-      },
-    });
+    this.group = scene.add.group();
+    this.pool = scene.add.group();
 
     this.addPlatform(scene.scale.width, scene.scale.width / 2);
   }
@@ -49,10 +41,7 @@ export default class PlatformManager {
   };
 
   getNthPlatformBounds = (nth: number): number[] => {
-    const platform = this.group.getFirstNth(
-      nth,
-      true,
-    ) as Phaser.Physics.Arcade.Sprite;
+    const platform = this.group.getFirstNth(nth, true) as Platform;
     return [
       platform.getTopLeft().x / this.scene.scale.width,
       platform.getTopLeft().y / this.scene.scale.height,
@@ -64,25 +53,34 @@ export default class PlatformManager {
   update = (): void => {
     this.step += 1;
 
+    // Update speed once per frame
+    if (this.step % config.platformSpeedThreshold === 0) {
+      this.platformSpeed -= this.step / config.platformSpeedThreshold;
+      this.itemManager?.setVelocityX(this.platformSpeed);
+    }
+
     let minDistance = this.scene.scale.width;
-    this.group.getChildren().forEach((child) => {
-      const platform = child as Phaser.Physics.Arcade.Sprite;
+    const children = this.group.getChildren();
+
+    for (let i = children.length - 1; i >= 0; i -= 1) {
+      const platform = children[i] as Platform;
       const platformDistance =
         this.scene.scale.width - platform.x - platform.displayWidth / 2;
 
       minDistance = Math.min(minDistance, platformDistance);
 
       if (platform.x < -platform.displayWidth / 2) {
-        this.group.killAndHide(platform);
         this.group.remove(platform);
-        return;
+        platform.setActive(false);
+        platform.setVisible(false);
+        this.pool.add(platform);
+        continue;
       }
 
       if (this.step % config.platformSpeedThreshold === 0) {
-        this.platformSpeed -= this.step / config.platformSpeedThreshold;
         platform.setVelocityX(this.platformSpeed);
       }
-    }, this);
+    }
 
     if (minDistance > this.nextPlatformDistance) {
       const nextPlatformWidth = this.rnd.between(
@@ -96,24 +94,58 @@ export default class PlatformManager {
     }
   };
 
+  private refillBag = (): void => {
+    const platformNames = Object.values(PlatformNames);
+    const minEach = 2;
+    const totalSize = 10;
+
+    platformNames.forEach((name) => {
+      for (let i = 0; i < minEach; i += 1) {
+        this.platformBag.push(name);
+      }
+    });
+
+    while (this.platformBag.length < totalSize) {
+      const randomColor =
+        platformNames[this.rnd.between(0, platformNames.length - 1)];
+      this.platformBag.push(randomColor);
+    }
+
+    this.rnd.shuffle(this.platformBag);
+  };
+
   private addPlatform = (platformWidth: number, posX: number): void => {
-    let platform: Phaser.Physics.Arcade.Sprite;
-    if (this.pool.getLength()) {
-      platform = this.pool.getFirst() as Phaser.Physics.Arcade.Sprite;
-      platform.x = posX;
-      platform.active = true;
-      platform.visible = true;
+    if (this.platformBag.length === 0) {
+      this.refillBag();
+    }
+    const platformName = this.platformBag.shift();
+    if (!platformName) return;
+
+    let platform: Platform;
+    if (this.pool.getLength() > 0) {
+      platform = this.pool.getFirst() as Platform;
       this.pool.remove(platform);
+      this.group.add(platform);
+      platform.reset(
+        posX,
+        platformName,
+        platformWidth,
+        this.platformSpeed,
+        this.itemManager,
+      );
     } else {
-      platform = this.scene.physics.add
-        .sprite(posX, this.scene.scale.height * 0.8, 'platform')
-        .setScale(0.5)
-        .refreshBody();
-      platform.setImmovable(true);
-      platform.setVelocityX(this.platformSpeed);
+      platform = new Platform(
+        this.scene,
+        posX,
+        this.scene.scale.height * 0.8,
+        platformName,
+        platformWidth,
+        this.platformSpeed,
+        this.itemManager,
+      );
       this.group.add(platform);
     }
-    platform.displayWidth = platformWidth;
+
     this.nextPlatformDistance = this.rnd.between(
       config.spawnRange[0] ?? 100,
       config.spawnRange[1] ?? 200,
@@ -121,4 +153,6 @@ export default class PlatformManager {
   };
 
   getGroup = (): Phaser.GameObjects.Group => this.group;
+
+  getCurrentSpeed = (): number => this.platformSpeed;
 }

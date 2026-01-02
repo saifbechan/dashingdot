@@ -1,0 +1,23 @@
+[
+  {
+    "id": "sparkle",
+    "frameWidth": 200,
+    "frameHeight": 200,
+    "frames": 8,
+    "assetPath": "images/effects/sparkle.png"
+  },
+  {
+    "id": "cloud",
+    "frameWidth": 200,
+    "frameHeight": 200,
+    "frames": 7,
+    "assetPath": "images/effects/cloud.png"
+  },
+  {
+    "id": "burn",
+    "frameWidth": 290,
+    "frameHeight": 290,
+    "frames": 7,
+    "assetPath": "images/effects/burn.png"
+  }
+]
