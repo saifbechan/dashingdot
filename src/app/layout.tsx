@@ -8,15 +8,17 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Genetic Algorithm V2', // Default title, inferred
-  description: 'Genetic Algorithm simulation', // Default description
-  applicationName: 'Genetic Algorithm V2',
-  keywords: ['react', 'typescript', 'javascript', 'github', 'nextjs'],
-  icons: {
-    icon: '/favicon.ico',
-    apple: '/favicon.png',
-  },
-  manifest: '/manifest.json',
+  title: 'Dashing Dot',
+  description:
+    'An AI-powered endless runner where neural networks evolve to survive.',
+  applicationName: 'Dashing Dot',
+  keywords: [
+    'phaser',
+    'neuroevolution',
+    'genetic algorithm',
+    'nextjs',
+    'typescript',
+  ],
 };
 
 export default function RootLayout({
