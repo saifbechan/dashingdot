@@ -1,11 +1,12 @@
 import Pause from '@/Pause';
 import Play from '@/Play';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  type AnimationsNames,
-  type MobNames,
-  type PlayerNames,
-} from './constants';
+import { type AnimationsNames, type MobNames, PlayerNames } from './constants';
+import playerConfig from './player-config.json';
+
+const playerNames = Object.values(PlayerNames);
+const randomPlayer =
+  playerNames[Math.floor(Math.random() * playerNames.length)];
 
 const game: Phaser.Types.Core.GameConfig = {
   backgroundColor: '#ccc',
@@ -20,12 +21,13 @@ const game: Phaser.Types.Core.GameConfig = {
   physics: {
     default: 'arcade',
     arcade: {
-      debug: false,
+      debug: true,
     },
   },
   fps: { min: 20, target: 30 },
   scene: [Play, Pause],
   seed: [uuidv4()],
+  pixelArt: true,
 };
 
 const players: {
@@ -33,11 +35,13 @@ const players: {
   offset: Record<PlayerNames, number>;
 } = {
   animations: {
-    fly: [0, 1, 2, 3],
-    walk: [0, 1, 2, 3, 4, 5, 6, 7],
+    fly: [0, 1, 2, 3], // fallback
+    walk: [0, 1, 2, 3, 4, 5, 6, 7], // fallback
     jump: [0, 1, 2],
   },
-  offset: { punk: 50, champ: 32 },
+  offset: Object.fromEntries(
+    Object.values(PlayerNames).map((name) => [name, 0]),
+  ) as Record<PlayerNames, number>,
 };
 
 const mobs: {
@@ -49,7 +53,9 @@ const mobs: {
 };
 
 const config = {
-  playerCount: 50,
+  selectedPlayer: randomPlayer,
+  playerConfig,
+  playerCount: 1,
 
   platformStartSpeed: 350,
   platformSpeedThreshold: 500,

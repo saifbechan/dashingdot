@@ -1,5 +1,5 @@
 import config from '@/lib/config';
-import { AnimationsNames, MobNames, PlayerNames } from '@/lib/constants';
+import { AnimationsNames, MobNames } from '@/lib/constants';
 import { memory } from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 import MobManager from './World/MobManager';
@@ -127,18 +127,16 @@ class Play extends Phaser.Scene {
     this.load.image('front', 'images/backgrounds/purple/front.png');
     this.load.image('platform', 'images/platforms/tile-purple.png');
 
-    Object.values(PlayerNames).forEach((name) => {
-      Object.values(AnimationsNames).forEach((animation) => {
-        this.load.spritesheet(
-          `${name}-${animation}`,
-          `images/players/${name}-${animation}.png`,
-          {
-            frameWidth: 150,
-            frameHeight: 150,
-          },
-        );
+    // Load selected player
+    const charConfig = config.playerConfig.find(
+      (c) => c.id === (config.selectedPlayer as string),
+    );
+    if (charConfig) {
+      this.load.spritesheet(charConfig.id, charConfig.assetPath, {
+        frameWidth: charConfig.frameWidth,
+        frameHeight: charConfig.frameHeight,
       });
-    });
+    }
 
     Object.values(MobNames).forEach((name) => {
       console.log(`${name}-${AnimationsNames.FLY}`);

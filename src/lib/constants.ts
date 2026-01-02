@@ -1,6 +1,12 @@
 export enum PlayerNames {
-  PUNK = 'punk',
-  CHAMP = 'champ',
+  CIPHER = 'cipher',
+  ROGUE = 'rogue',
+  VORTEX = 'vortex',
+  GLITCH = 'glitch',
+  NEON = 'neon',
+  SHADOW = 'shadow',
+  FLUX = 'flux',
+  PULSE = 'pulse',
 }
 
 export enum MobNames {

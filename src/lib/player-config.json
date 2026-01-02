@@ -1,0 +1,154 @@
+[
+  {
+    "id": "cipher",
+    "name": "Cipher",
+    "assetPath": "/images/players/Cipher.png",
+    "frameWidth": 150,
+    "frameHeight": 150,
+    "animations": {
+      "walk": {
+        "row": 0,
+        "frames": 8
+      },
+      "fly": {
+        "row": 1,
+        "frames": 4
+      }
+    },
+    "cols": 8,
+    "offsetYCorrection": 25
+  },
+  {
+    "id": "rogue",
+    "name": "Rogue",
+    "assetPath": "/images/players/Rogue.png",
+    "frameWidth": 150,
+    "frameHeight": 150,
+    "animations": {
+      "walk": {
+        "row": 0,
+        "frames": 8
+      },
+      "fly": {
+        "row": 1,
+        "frames": 4
+      }
+    },
+    "cols": 8,
+    "offsetYCorrection": 20
+  },
+  {
+    "id": "vortex",
+    "name": "Vortex",
+    "assetPath": "/images/players/Vortex.png",
+    "frameWidth": 150,
+    "frameHeight": 150,
+    "animations": {
+      "walk": {
+        "row": 0,
+        "frames": 8
+      },
+      "fly": {
+        "row": 1,
+        "frames": 4
+      }
+    },
+    "cols": 8,
+    "offsetYCorrection": 25
+  },
+  {
+    "id": "glitch",
+    "name": "Glitch",
+    "assetPath": "/images/players/Glitch.png",
+    "frameWidth": 150,
+    "frameHeight": 150,
+    "animations": {
+      "walk": {
+        "row": 0,
+        "frames": 8
+      },
+      "fly": {
+        "row": 1,
+        "frames": 4
+      }
+    },
+    "cols": 8,
+    "offsetYCorrection": 25
+  },
+  {
+    "id": "neon",
+    "name": "Neon",
+    "assetPath": "/images/players/Neon.png",
+    "frameWidth": 150,
+    "frameHeight": 150,
+    "animations": {
+      "walk": {
+        "row": 0,
+        "frames": 8
+      },
+      "fly": {
+        "row": 1,
+        "frames": 4
+      }
+    },
+    "cols": 8,
+    "offsetYCorrection": 20
+  },
+  {
+    "id": "shadow",
+    "name": "Shadow",
+    "assetPath": "/images/players/Shadow.png",
+    "frameWidth": 150,
+    "frameHeight": 150,
+    "animations": {
+      "walk": {
+        "row": 0,
+        "frames": 8
+      },
+      "fly": {
+        "row": 1,
+        "frames": 4
+      }
+    },
+    "cols": 8,
+    "offsetYCorrection": 25
+  },
+  {
+    "id": "flux",
+    "name": "Flux",
+    "assetPath": "/images/players/Flux.png",
+    "frameWidth": 150,
+    "frameHeight": 150,
+    "animations": {
+      "walk": {
+        "row": 0,
+        "frames": 8
+      },
+      "fly": {
+        "row": 1,
+        "frames": 4
+      }
+    },
+    "cols": 8,
+    "offsetYCorrection": 25
+  },
+  {
+    "id": "pulse",
+    "name": "Pulse",
+    "assetPath": "/images/players/Pulse.png",
+    "frameWidth": 150,
+    "frameHeight": 150,
+    "animations": {
+      "walk": {
+        "row": 0,
+        "frames": 8
+      },
+      "fly": {
+        "row": 1,
+        "frames": 4
+      }
+    },
+    "cols": 8,
+    "offsetYCorrection": 20
+  }
+]

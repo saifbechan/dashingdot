@@ -20,7 +20,15 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
 
     if (playersData.length === 0) {
       populate(config.playerCount).forEach((brain: Sequential) => {
-        this.add(new Player(scene, 50, scene.scale.height / 2, brain));
+        this.add(
+          new Player(
+            scene,
+            50,
+            scene.scale.height / 2,
+            brain,
+            config.selectedPlayer,
+          ),
+        );
       });
     } else {
       const evaluated = evaluate(playersData);
@@ -33,7 +41,15 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
 
       repopulate(config.playerCount, [...selected, ...mutated]).forEach(
         (brain: Sequential) => {
-          this.add(new Player(scene, 200, scene.scale.height / 2, brain));
+          this.add(
+            new Player(
+              scene,
+              200,
+              scene.scale.height / 2,
+              brain,
+              config.selectedPlayer,
+            ),
+          );
         },
       );
 

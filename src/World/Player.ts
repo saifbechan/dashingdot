@@ -1,5 +1,5 @@
 import config from '@/lib/config';
-import { PlayerNames } from '@/lib/constants';
+import { type PlayerNames } from '@/lib/constants';
 import { type Sequential } from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 import { predict } from '../NeuroEvolution/NeuralNetwork';
@@ -21,36 +21,63 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     x: number,
     y: number,
     brain: Sequential,
-    name: PlayerNames = PlayerNames.PUNK,
+    name: PlayerNames,
   ) {
     super(scene, x, y, name);
 
     this.setName(name);
 
-    const {
-      gravity,
-      players: { animations, offset },
-    } = config;
+    const { gravity } = config;
 
     this.brain = brain;
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
-    this.setScale(0.5);
-    this.setSize(85, 85);
-    this.setGravityY(gravity);
-    this.setOffset(offset[name]);
+    const charConfig = config.playerConfig.find(
+      (c) => c.id === (name as string),
+    );
+    if (!charConfig) {
+      console.warn(`Player config not found for ${name}`);
+      return;
+    }
 
-    (Object.keys(animations) as (keyof typeof animations)[]).forEach((key) => {
-      this.anims.create({
-        key: key as string,
-        frames: this.anims.generateFrameNumbers(`${name}-${key}`, {
-          frames: animations[key],
-        }),
-        frameRate: 16,
-        repeat: -1,
-      });
+    this.setScale(0.5);
+    const bodySize = 85;
+    this.setSize(bodySize, bodySize);
+    this.setGravityY(gravity);
+
+    // Center the body horizontally and align to bottom vertically with a slight adjustment
+    const offsetX = (charConfig.frameWidth - bodySize) / 2;
+
+    // Use configurable offset from player config
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
+    const correction = (charConfig as any).offsetYCorrection ?? 20;
+
+    const offsetY = charConfig.frameHeight - bodySize - correction;
+    this.setOffset(offsetX, offsetY);
+
+    const { walk, fly } = charConfig.animations;
+    const cols = charConfig.cols;
+
+    this.anims.create({
+      key: 'walk',
+      frames: this.anims.generateFrameNumbers(name, {
+        start: walk.row * cols,
+        end: walk.row * cols + walk.frames - 1,
+      }),
+      frameRate: 16,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: 'fly',
+      frames: this.anims.generateFrameNumbers(name, {
+        start: fly.row * cols,
+        end: fly.row * cols + fly.frames - 1,
+      }),
+      frameRate: 16,
+      repeat: -1,
     });
   }
 
