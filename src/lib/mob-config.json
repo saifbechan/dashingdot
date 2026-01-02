@@ -1,0 +1,58 @@
+[
+  {
+    "id": "trojan",
+    "name": "Trojan",
+    "assetPath": "/images/mobs/Trojan.png",
+    "frameWidth": 250,
+    "frameHeight": 141,
+    "frames": 4
+  },
+  {
+    "id": "drone",
+    "name": "Drone",
+    "assetPath": "/images/mobs/Drone.png",
+    "frameWidth": 250,
+    "frameHeight": 141,
+    "frames": 4
+  },
+  {
+    "id": "bug",
+    "name": "Bug",
+    "assetPath": "/images/mobs/Bug.png",
+    "frameWidth": 250,
+    "frameHeight": 141,
+    "frames": 4
+  },
+  {
+    "id": "worm",
+    "name": "Worm",
+    "assetPath": "/images/mobs/Worm.png",
+    "frameWidth": 250,
+    "frameHeight": 141,
+    "frames": 4
+  },
+  {
+    "id": "virus",
+    "name": "Virus",
+    "assetPath": "/images/mobs/Virus.png",
+    "frameWidth": 250,
+    "frameHeight": 141,
+    "frames": 4
+  },
+  {
+    "id": "bot",
+    "name": "Bot",
+    "assetPath": "/images/mobs/Bot.png",
+    "frameWidth": 250,
+    "frameHeight": 141,
+    "frames": 4
+  },
+  {
+    "id": "spam",
+    "name": "Spam",
+    "assetPath": "/images/mobs/Spam.png",
+    "frameWidth": 250,
+    "frameHeight": 141,
+    "frames": 4
+  }
+]

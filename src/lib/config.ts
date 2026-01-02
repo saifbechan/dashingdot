@@ -1,10 +1,14 @@
 import Pause from '@/Pause';
 import Play from '@/Play';
 import { v4 as uuidv4 } from 'uuid';
-import { type AnimationsNames, type MobNames, PlayerNames } from './constants';
+import { type AnimationsNames, MobNames, PlayerNames } from './constants';
+import mobConfig from './mob-config.json';
 import playerConfig from './player-config.json';
 
 const playerNames = Object.values(PlayerNames);
+const mobNames = Object.values(MobNames);
+
+const randomMob = mobNames[Math.floor(Math.random() * mobNames.length)];
 const randomPlayer =
   playerNames[Math.floor(Math.random() * playerNames.length)];
 
@@ -48,13 +52,17 @@ const mobs: {
   animations: { [AnimationsNames.FLY]: number[] };
   offset: Record<MobNames, number>;
 } = {
-  animations: { fly: [0, 1, 2, 3] },
-  offset: { crusher: 0 },
+  animations: { fly: [0, 1, 2, 3] }, // fallback
+  offset: Object.fromEntries(
+    Object.values(MobNames).map((name) => [name, 0]),
+  ) as Record<MobNames, number>,
 };
 
 const config = {
   selectedPlayer: randomPlayer,
+  selectedMob: randomMob,
   playerConfig,
+  mobConfig,
   playerCount: 1,
 
   platformStartSpeed: 350,

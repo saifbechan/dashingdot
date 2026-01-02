@@ -10,7 +10,13 @@ export enum PlayerNames {
 }
 
 export enum MobNames {
-  CRUSHER = 'crusher',
+  DRONE = 'drone',
+  BUG = 'bug',
+  WORM = 'worm',
+  VIRUS = 'virus',
+  BOT = 'bot',
+  SPAM = 'spam',
+  TROJAN = 'trojan',
 }
 
 export enum AnimationsNames {

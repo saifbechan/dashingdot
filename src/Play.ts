@@ -1,5 +1,5 @@
 import config from '@/lib/config';
-import { AnimationsNames, MobNames } from '@/lib/constants';
+import { AnimationsNames } from '@/lib/constants';
 import { memory } from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 import MobManager from './World/MobManager';
@@ -51,7 +51,7 @@ class Play extends Phaser.Scene {
     this.platformManager = new PlatformManager(this);
     this.playerManager = new PlayerManager(this, playersData);
 
-    new MobManager(this);
+    this.mobManager = new MobManager(this);
 
     this.physics.add.collider(
       this.platformManager.getGroup(),
@@ -108,6 +108,7 @@ class Play extends Phaser.Scene {
     }
 
     this.platformManager.update();
+    this.mobManager.update(this.time.now, this.game.loop.delta);
     this.playerManager.update();
 
     this.playerCountText.setText(
@@ -138,14 +139,14 @@ class Play extends Phaser.Scene {
       });
     }
 
-    Object.values(MobNames).forEach((name) => {
-      console.log(`${name}-${AnimationsNames.FLY}`);
+    // Load all mobs
+    config.mobConfig.forEach((mobConf) => {
       this.load.spritesheet(
-        `${name}-${AnimationsNames.FLY}`,
-        `images/mobs/${name}-${AnimationsNames.FLY}.png`,
+        `${mobConf.id}-${AnimationsNames.FLY}`,
+        mobConf.assetPath,
         {
-          frameWidth: 250,
-          frameHeight: 141,
+          frameWidth: mobConf.frameWidth,
+          frameHeight: mobConf.frameHeight,
         },
       );
     });
