@@ -72,7 +72,7 @@ const config = {
   itemConfig,
   projectileConfig,
   backgroundConfig,
-  playerCount: 50,
+  playerCount: 160,
 
   platformStartSpeed: 350,
   platformSpeedThreshold: 500,

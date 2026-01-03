@@ -12,13 +12,16 @@ export default class ProjectileManager extends Phaser.GameObjects.Group {
     y: number,
     name: ProjectileNames,
     shooterId: string,
+    alpha = 1,
   ): void {
     const projectile = this.getFirstDead(false) as Projectile | null;
 
     if (projectile) {
       projectile.initProjectile(x, y, name, shooterId);
+      projectile.setAlpha(alpha);
     } else {
       const newProjectile = new Projectile(this.scene, x, y, name, shooterId);
+      newProjectile.setAlpha(alpha);
       this.add(newProjectile);
     }
   }

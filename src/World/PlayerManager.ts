@@ -1,22 +1,18 @@
 import config from '@/lib/config';
-import { EffectNames, ProjectileNames } from '@/lib/constants';
-import { type Sequential } from '@tensorflow/tfjs';
-import {
-  crossover,
-  evaluate,
-  mutate,
-  populate,
-  repopulate,
-  select,
-  speciate,
-} from '../NeuroEvolution/GeneticAlgorithm';
+import { EffectNames, PlayerNames, ProjectileNames } from '@/lib/constants';
+import { type NEATConfig } from '../AI/NEAT';
+import { getNEATController } from '../AI/NEAT/instance';
 import { type PlayDataType } from '../Scenes/Play';
 import type EffectManager from './EffectManager';
 import Player, { type EvolveableType } from './Player';
 
+// Get all player skins for species mapping
+const PLAYER_SKINS = Object.values(PlayerNames);
+
 export default class PlayerManager extends Phaser.GameObjects.Group {
   private readonly playersData: EvolveableType[] = [];
   private effectManager: EffectManager;
+  private neatController: ReturnType<typeof getNEATController>;
 
   constructor(
     scene: Phaser.Scene,
@@ -26,58 +22,100 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
     super(scene);
     this.effectManager = effectManager;
 
-    if (playersData.length === 0) {
-      populate(config.playerCount).forEach((brain: Sequential) => {
-        const projectileNames = Object.values(ProjectileNames);
-        const randomProjectile =
-          projectileNames[Math.floor(Math.random() * projectileNames.length)];
+    // Create NEAT configuration
+    const neatConfig: NEATConfig = {
+      populationSize: 160,
+      inputCount: config.model.inputs,
+      outputCount: config.model.outputs,
+      maxHiddenNodes: 20,
+      targetSpecies: 8,
 
-        this.add(
-          new Player(
-            scene,
-            50,
-            scene.scale.height / 2,
-            brain,
-            config.selectedPlayer,
-            randomProjectile,
-          ),
-        );
+      // Species config
+      compatibilityThreshold: 3.0, // Higher threshold = fewer species
+      compatibilityModifier: 0.3, // Faster adjustment
+      excessCoefficient: 1.0,
+      disjointCoefficient: 1.0,
+      weightDifferenceCoefficient: 0.4,
+      stagnationLimit: 15,
+
+      // Evolution rates
+      survivalRate: 0.2,
+      mutationRates: {
+        weight: 0.5,
+        node: 0.05,
+        connection: 0.05,
+        perturbWeight: 0.9,
+      },
+    };
+
+    // Get persistent controller instance
+    this.neatController = getNEATController(neatConfig);
+
+    // If we have previous generation data, run evolution
+    if (playersData.length > 0) {
+      // Update fitness directly on genome objects using the reference
+      playersData.forEach((p) => {
+        p.genome.fitness = p.fitness;
       });
-    } else {
-      const evaluated = evaluate(playersData);
 
-      const selected = select(evaluated);
-
-      const speciated = speciate(playersData);
-      const crossed = crossover(speciated);
-      const mutated = mutate(crossed);
-
-      repopulate(config.playerCount, [...selected, ...mutated]).forEach(
-        (brain: Sequential) => {
-          const projectileNames = Object.values(ProjectileNames);
-          const randomProjectile =
-            projectileNames[Math.floor(Math.random() * projectileNames.length)];
-
-          this.add(
-            new Player(
-              scene,
-              200,
-              scene.scale.height / 2,
-              brain,
-              config.selectedPlayer,
-              randomProjectile,
-            ),
-          );
-        },
-      );
-
-      playersData.forEach(({ network }) => network.dispose());
+      this.neatController.epoch();
     }
+
+    // Create players from genomes
+    this.createPlayersFromPopulation(scene);
+  }
+
+  /**
+   * Create Player instances from the NEAT population
+   */
+  private createPlayersFromPopulation(scene: Phaser.Scene): void {
+    const population = this.neatController.getPopulation();
+
+    for (const { genome, speciesId } of population) {
+      const projectileNames = Object.values(ProjectileNames);
+      const randomProjectile =
+        projectileNames[Math.floor(Math.random() * projectileNames.length)];
+
+      // Map species to player skin (8 species = 8 skins)
+      const playerSkin = this.getSkinForSpecies(speciesId);
+
+      this.add(
+        new Player(
+          scene,
+          50,
+          scene.scale.height / 2,
+          genome,
+          speciesId,
+          playerSkin,
+          randomProjectile,
+        ),
+      );
+    }
+  }
+
+  /**
+   * Map species ID to player skin
+   */
+  private getSkinForSpecies(speciesId: number): PlayerNames {
+    return PLAYER_SKINS[speciesId % PLAYER_SKINS.length];
+  }
+
+  public getPlayerById(id: string): Player | undefined {
+    return this.getChildren().find((p) => (p as Player).id === id) as
+      | Player
+      | undefined;
+  }
+
+  public isTopPlayer(id: string): boolean {
+    const children = this.getChildren();
+    if (children.length === 0) return false;
+    return (children[0] as Player).id === id;
   }
 
   public killPlayer(player: Player, effectName: EffectNames): void {
     // Play requested effect using EffectManager
     if (effectName === EffectNames.CLOUD) {
+      player.markFellOff(); // Mark as fell off if it's the cloud death (falling)
       this.effectManager.playEffect(player.x, player.y + 30, effectName);
     } else {
       this.effectManager.playEffect(player.x, player.y, effectName);

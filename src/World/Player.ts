@@ -1,10 +1,9 @@
 import config from '@/lib/config';
 import { type PlayerNames, type ProjectileNames } from '@/lib/constants';
 import { raycast } from '@/lib/Raycaster';
-import { type Sequential } from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 import { v4 as uuidv4 } from 'uuid';
-import { predict } from '../NeuroEvolution/NeuralNetwork';
+import { type Genome } from '../AI/NEAT';
 import { type PlaySceneType } from '../Scenes/Play';
 
 // Vision system constants
@@ -30,13 +29,15 @@ const MOB_PREFIX = 'mob-';
 const ITEM_NAMES = ['powerup', 'coin', 'gem'];
 
 export interface EvolveableType {
-  network: Sequential;
+  genome: Genome;
+  speciesId: number;
   fitness: number;
 }
 
 class Player extends Phaser.Physics.Arcade.Sprite {
   public readonly id: string;
-  private readonly brain: Sequential;
+  private readonly genome: Genome;
+  public readonly speciesId: number;
 
   private timeAlive = 0;
   private totalSteps = 0;
@@ -70,7 +71,8 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     scene: Phaser.Scene,
     x: number,
     y: number,
-    brain: Sequential,
+    genome: Genome,
+    speciesId: number,
     name: PlayerNames,
     projectileType: ProjectileNames,
   ) {
@@ -82,7 +84,8 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 
     const { gravity } = config;
 
-    this.brain = brain;
+    this.genome = genome;
+    this.speciesId = speciesId;
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
@@ -153,7 +156,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
       this.aiAccumulator -= AI_TICK_MS;
       const scene = this.scene as PlaySceneType;
       const inputs = this.getInputs(scene);
-      this.cachedPrediction = predict(this.brain, inputs);
+      this.cachedPrediction = this.genome.activate(inputs);
     }
 
     const shouldJump = this.cachedPrediction[0] > 0.5;
@@ -163,12 +166,19 @@ class Player extends Phaser.Physics.Arcade.Sprite {
       this.anims.play('walk', true);
       this.totalSteps += 1;
 
+      // Detect new landing
+      if (!this.wasTouchingDown) {
+        this.platformJumps++;
+      }
+
       if (shouldJump) {
         this.setVelocityY(config.jumpForce * -1);
       }
     } else {
       this.anims.play('fly', true);
     }
+
+    this.wasTouchingDown = this.body.touching.down;
 
     if (shouldShoot && time > this.lastShootTime + this.shootDelay) {
       this.shoot(time);
@@ -182,11 +192,15 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.lastShootTime = time;
 
     const scene = this.scene as PlaySceneType;
+    const isTopPlayer = scene.playerManager.isTopPlayer(this.id);
+    const bulletAlpha = isTopPlayer ? 1 : 0.25;
+
     scene.projectileManager.spawnProjectile(
       this.x + 20,
       this.y,
       this.projectileType,
       this.id,
+      bulletAlpha,
     );
   }
 
@@ -299,12 +313,51 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     return this.orderedHistory;
   }
 
+  // Fitness tracking stats
+  private mobsKilled = 0;
+  private itemsCollected = 0;
+  private platformJumps = 0;
+  private fellOff = false;
+  private wasTouchingDown = false;
+
+  public recordMobKill(): void {
+    this.mobsKilled++;
+    this.addAmmo(2); // Bonus ammo for kills
+  }
+
+  public recordItemCollection(): void {
+    this.itemsCollected++;
+  }
+
+  public markFellOff(): void {
+    this.fellOff = true;
+  }
+
+  private calculateFitness(): number {
+    // Multi-objective fitness function
+    // 1. Survival is the baseline (timeAlive + distance/steps)
+    // 2. Actions (killing, collecting) are multipliers or large bonuses
+
+    let score = this.timeAlive + this.totalSteps;
+
+    // bonuses
+    score += this.mobsKilled * 100; // High reward for combat
+    score += this.itemsCollected * 50; // Medium reward for looting
+    score += this.platformJumps * 10; // Reward for successful landings
+
+    // Penalties
+    if (this.fellOff && this.timeAlive < 100) {
+      score *= 0.5; // Penalty for early death by falling
+    }
+
+    return Math.max(0, score);
+  }
+
   getPlayersData = (): EvolveableType =>
     ({
-      network: this.brain,
-      fitness: this.timeAlive + this.totalSteps,
-      timeAlive: this.timeAlive,
-      totalSteps: this.totalSteps,
+      genome: this.genome,
+      speciesId: this.speciesId,
+      fitness: this.calculateFitness(),
     }) as EvolveableType;
 
   setTransparency = (alpha: number): void => {

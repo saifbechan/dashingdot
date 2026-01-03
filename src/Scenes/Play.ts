@@ -8,7 +8,7 @@ import {
 import { buildRaycastTargets, type RaycastTarget } from '@/lib/Raycaster';
 import effectConfig from '@/lib/sprite-configs/effect-config.json';
 import projectileConfig from '@/lib/sprite-configs/projectile-config.json';
-import { memory } from '@tensorflow/tfjs';
+
 import Phaser from 'phaser';
 import { v4 as uuidv4 } from 'uuid';
 import EffectManager from '../World/EffectManager';
@@ -32,6 +32,7 @@ export interface PlayDataType {
 export type PlaySceneType = Phaser.Scene & {
   platformManager: PlatformManager;
   projectileManager: ProjectileManager;
+  playerManager: PlayerManager;
   mobManager: MobManager;
   itemManager: ItemManager;
   raycastTargets: RaycastTarget[];
@@ -71,7 +72,6 @@ class Play extends Phaser.Scene {
     console.table({
       generation,
       seed: seed[0],
-      tensors: (memory() as unknown as { numTensors: number }).numTensors,
     });
   };
 
@@ -130,6 +130,8 @@ class Play extends Phaser.Scene {
           player.addAmmo(5);
         }
 
+        player.recordItemCollection();
+
         // One sparkle per pickup
         this.effectManager.playEffect(item.x, item.y, EffectNames.SPARKLE, 0.5);
       },
@@ -170,6 +172,12 @@ class Play extends Phaser.Scene {
 
         const activePlayers = this.playerManager.getChildren() as Player[];
         mob.shoot(projectile.shooterId, activePlayers);
+
+        // Credit the shooter
+        const shooter = this.playerManager.getPlayerById(projectile.shooterId);
+        if (shooter) {
+          shooter.recordMobKill();
+        }
 
         projectile.deactivate();
 
@@ -279,16 +287,13 @@ class Play extends Phaser.Scene {
       this.load.image(`${bgConfig.id}-${layer.image}`, layer.path);
     });
 
-    // Load selected player
-    const charConfig = config.playerConfig.find(
-      (c) => c.id === (config.selectedPlayer as string),
-    );
-    if (charConfig) {
+    // Load ALL player skins (for species-based visual speciation)
+    config.playerConfig.forEach((charConfig) => {
       this.load.spritesheet(charConfig.id, charConfig.assetPath, {
         frameWidth: charConfig.frameWidth,
         frameHeight: charConfig.frameHeight,
       });
-    }
+    });
 
     // Load all mobs
     config.mobConfig.forEach((mobConf) => {

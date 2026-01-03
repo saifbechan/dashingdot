@@ -7,3 +7,4 @@ trigger: always_on
 - Never use suppressHydrationWarning
 - Never install npm packages with force or --legacy-peer-deps
 - use the coding style defined by eslint and prettier
+- when you run the linter always add the fix option
