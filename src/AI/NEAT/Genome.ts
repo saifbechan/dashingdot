@@ -39,8 +39,8 @@ export interface GenomeConfig {
   maxHiddenNodes: number;
 }
 
-// Activation function implementations
-const activations: Record<ActivationFunction, (x: number) => number> = {
+// Activation function implementations (kept for future activation function support)
+const _activations: Record<ActivationFunction, (x: number) => number> = {
   sigmoid: (x: number) => 1 / (1 + Math.exp(-x)),
   tanh: (x: number) => Math.tanh(x),
   relu: (x: number) => Math.max(0, x),
@@ -55,12 +55,27 @@ export class Genome {
   private readonly _config: GenomeConfig;
   private nodeValues: Float32Array;
 
+  // Topology cache for O(1) activation after first run
+  private cachedSortedNodes: number[] | null = null;
+  private cachedIncomingConnections: Map<number, ConnectionGene[]> | null =
+    null;
+  private topologyDirty = true;
+
   constructor(config: GenomeConfig) {
     this._config = config;
     // Pre-allocate max possible nodes: inputs + outputs + max hidden
     this.nodeValues = new Float32Array(
       config.inputCount + config.outputCount + config.maxHiddenNodes,
     );
+  }
+
+  /**
+   * Mark topology as dirty (call after any structural mutation)
+   */
+  markTopologyDirty(): void {
+    this.topologyDirty = true;
+    this.cachedSortedNodes = null;
+    this.cachedIncomingConnections = null;
   }
 
   get config(): GenomeConfig {
@@ -113,9 +128,14 @@ export class Genome {
 
   /**
    * Forward propagation - replaces TensorFlow.js predict()
-   * Uses topological sorting for correct evaluation order
+   * Uses cached topological sorting for correct evaluation order
    */
   activate(inputs: Float32Array | number[]): number[] {
+    // Build cache if topology changed
+    if (this.topologyDirty) {
+      this.buildTopologyCache();
+    }
+
     // Reset all node values
     this.nodeValues.fill(0);
 
@@ -124,25 +144,23 @@ export class Genome {
       this.nodeValues[i] = inputs[i] ?? 0;
     }
 
-    // Get topologically sorted node order
-    const sortedNodes = this.topologicalSort();
+    // Process nodes in cached order using pre-indexed connections
+    const sortedNodes = this.cachedSortedNodes;
+    const incomingMap = this.cachedIncomingConnections;
+    if (!sortedNodes || !incomingMap) return [];
 
-    // Process nodes in order
     for (const nodeId of sortedNodes) {
-      const node = this.nodes.find((n) => n.id === nodeId);
-      if (!node || node.type === NodeType.INPUT) continue;
+      const incoming = incomingMap.get(nodeId);
+      if (!incoming) continue;
 
-      // Sum incoming connections
+      // Sum incoming connections (already filtered to enabled only)
       let sum = 0;
-      for (const conn of this.connections) {
-        if (conn.outNode === nodeId && conn.enabled) {
-          sum += this.nodeValues[conn.inNode] * conn.weight;
-        }
+      for (const conn of incoming) {
+        sum += this.nodeValues[conn.inNode] * conn.weight;
       }
 
-      // Apply activation function
-      const activationFn = activations[node.activation];
-      this.nodeValues[nodeId] = activationFn(sum);
+      // Apply sigmoid activation (most common, inlined for speed)
+      this.nodeValues[nodeId] = 1 / (1 + Math.exp(-sum));
     }
 
     // Extract output values
@@ -155,9 +173,22 @@ export class Genome {
   }
 
   /**
-   * Topological sort of nodes for correct activation order
+   * Build topology cache: sorted nodes and incoming connection index
    */
-  private topologicalSort(): number[] {
+  private buildTopologyCache(): void {
+    // Build incoming connections map (only enabled connections)
+    this.cachedIncomingConnections = new Map();
+    for (const conn of this.connections) {
+      if (!conn.enabled) continue;
+      const existing = this.cachedIncomingConnections.get(conn.outNode);
+      if (existing) {
+        existing.push(conn);
+      } else {
+        this.cachedIncomingConnections.set(conn.outNode, [conn]);
+      }
+    }
+
+    // Topological sort
     const visited = new Set<number>();
     const result: number[] = [];
 
@@ -165,9 +196,9 @@ export class Genome {
       if (visited.has(nodeId)) return;
       visited.add(nodeId);
 
-      // Visit all nodes that this node depends on
-      for (const conn of this.connections) {
-        if (conn.outNode === nodeId && conn.enabled) {
+      const incoming = this.cachedIncomingConnections?.get(nodeId);
+      if (incoming) {
+        for (const conn of incoming) {
           visit(conn.inNode);
         }
       }
@@ -180,7 +211,11 @@ export class Genome {
       visit(this.config.inputCount + i);
     }
 
-    return result;
+    // Filter to only non-input nodes (inputs don't need processing)
+    this.cachedSortedNodes = result.filter(
+      (id) => id >= this.config.inputCount,
+    );
+    this.topologyDirty = false;
   }
 
   /**
@@ -209,6 +244,7 @@ export class Genome {
     this.fitness = 0;
     this.speciesId = 0;
     this.nodeValues.fill(0);
+    this.markTopologyDirty();
   }
 
   /**

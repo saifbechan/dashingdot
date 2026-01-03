@@ -364,6 +364,12 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.alpha = alpha;
   };
 
+  // Getters for dashboard
+  getTimeAlive = (): number => this.timeAlive * AI_TICK_MS;
+  getMobsKilled = (): number => this.mobsKilled;
+  getItemsCollected = (): number => this.itemsCollected;
+  getAmmo = (): number => this.ammo;
+
   destroy(fromScene?: boolean): void {
     if (this.debugGraphics) {
       this.debugGraphics.destroy();

@@ -15,7 +15,6 @@ export interface SpeciesConfig {
   weightDifferenceCoefficient: number; // c3
   stagnationLimit: number;
 }
-
 export class Species {
   public id: number;
   public members: Genome[] = [];
@@ -23,13 +22,20 @@ export class Species {
   public averageFitness = 0;
   public stagnation = 0;
   public bestFitness = 0;
+  public bornGeneration: number;
 
   private readonly config: SpeciesConfig;
   private stagnationCounter = 0;
 
-  constructor(id: number, representative: Genome, config: SpeciesConfig) {
+  constructor(
+    id: number,
+    representative: Genome,
+    config: SpeciesConfig,
+    generation: number,
+  ) {
     this.id = id;
     this.config = config;
+    this.bornGeneration = generation;
 
     // Create a deep copy of the representative using the pool
     // This ensures the species has its own independent reference
@@ -174,9 +180,16 @@ export class Species {
    */
   selectNewRepresentative(): void {
     if (this.members.length > 0) {
-      // Randomly select a member as the new representative
-      const idx = Math.floor(Math.random() * this.members.length);
-      this.representative = this.members[idx].clone();
+      // Randomly select a member as the new representative source
+      const newRepSource =
+        this.members[Math.floor(Math.random() * this.members.length)];
+
+      // Release old representative back to pool
+      genomePool.release(this.representative);
+
+      // Acquire new representative from pool and copy state
+      this.representative = genomePool.acquire(newRepSource.config);
+      this.representative.copyFrom(newRepSource);
     }
   }
 

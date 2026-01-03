@@ -29,6 +29,11 @@ export interface RaycastTarget {
   bounds: Phaser.Geom.Rectangle;
 }
 
+// Pre-allocated objects for zero-allocation raycasting
+const reusableRay = new Phaser.Geom.Line(0, 0, 0, 0);
+const reusableHitPoint = new Phaser.Math.Vector2();
+const intersectionPoints: Phaser.Geom.Point[] = [];
+
 /**
  * Cast a ray and find the closest intersection with any target.
  *
@@ -46,18 +51,14 @@ export function raycast(
   length: number,
   targets: RaycastTarget[],
 ): RaycastHit | null {
-  // Calculate ray endpoint
-  const endX = originX + Math.cos(angle) * length;
-  const endY = originY + Math.sin(angle) * length;
-
-  // Create line for intersection testing
-  const ray = new Phaser.Geom.Line(originX, originY, endX, endY);
+  // Calculate ray endpoint and reuse line object
+  reusableRay.x1 = originX;
+  reusableRay.y1 = originY;
+  reusableRay.x2 = originX + Math.cos(angle) * length;
+  reusableRay.y2 = originY + Math.sin(angle) * length;
 
   let closestHit: RaycastHit | null = null;
   let closestDistance = length;
-
-  // Pre-allocate intersection points array (reused per target)
-  const intersectionPoints: Phaser.Geom.Point[] = [];
 
   for (const target of targets) {
     // Skip inactive objects
@@ -68,24 +69,23 @@ export function raycast(
 
     // Get all intersection points between ray and rectangle
     Phaser.Geom.Intersects.GetLineToRectangle(
-      ray,
+      reusableRay,
       target.bounds,
       intersectionPoints,
     );
 
     // Find the closest intersection point for this target
     for (const point of intersectionPoints) {
-      const distance = Phaser.Math.Distance.Between(
-        originX,
-        originY,
-        point.x,
-        point.y,
-      );
+      const dx = point.x - originX;
+      const dy = point.y - originY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < closestDistance) {
         closestDistance = distance;
+        // Only allocate hit object when we find a closer hit
+        reusableHitPoint.set(point.x, point.y);
         closestHit = {
-          point: new Phaser.Math.Vector2(point.x, point.y),
+          point: reusableHitPoint,
           distance,
           object: target.gameObject,
         };

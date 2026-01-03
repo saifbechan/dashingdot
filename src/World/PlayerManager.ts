@@ -1,5 +1,6 @@
 import config from '@/lib/config';
 import { EffectNames, PlayerNames, ProjectileNames } from '@/lib/constants';
+import { gameStateBridge } from '@/store/bridge';
 import { type NEATConfig } from '../AI/NEAT';
 import { getNEATController } from '../AI/NEAT/instance';
 import { type PlayDataType } from '../Scenes/Play';
@@ -31,19 +32,19 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
       targetSpecies: 8,
 
       // Species config
-      compatibilityThreshold: 3.0, // Higher threshold = fewer species
-      compatibilityModifier: 0.3, // Faster adjustment
-      excessCoefficient: 1.0,
-      disjointCoefficient: 1.0,
-      weightDifferenceCoefficient: 0.4,
+      compatibilityThreshold: 1.5, // Start lower to split faster
+      compatibilityModifier: 0.3,
+      excessCoefficient: 1.5, // Structural changes now count more
+      disjointCoefficient: 1.5,
+      weightDifferenceCoefficient: 1.0, // Weights are now more distinct
       stagnationLimit: 15,
 
       // Evolution rates
       survivalRate: 0.2,
       mutationRates: {
-        weight: 0.5,
-        node: 0.05,
-        connection: 0.05,
+        weight: 0.8, // More frequent weight shifts
+        node: 0.08, // 8% chance for new node
+        connection: 0.1, // 10% chance for new pipe
         perturbWeight: 0.9,
       },
     };
@@ -128,17 +129,40 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
   }
 
   update = (): void => {
-    this.getChildren().forEach(
-      (child: Phaser.GameObjects.GameObject, index: number) => {
-        const player = child as Player;
+    const children = this.getChildren();
+    const playersAlive = children.length;
 
-        player.setTransparency(index > 0 ? 0.3 : 1);
+    // Update dashboard with players alive
+    gameStateBridge.updatePlayersAlive(playersAlive);
 
-        if (player.y >= this.scene.scale.height - 50) {
-          this.killPlayer(player, EffectNames.CLOUD);
-        }
-      },
-    );
+    children.forEach((child: Phaser.GameObjects.GameObject, index: number) => {
+      const player = child as Player;
+
+      player.setTransparency(index > 0 ? 0.3 : 1);
+
+      if (player.y >= this.scene.scale.height - 50) {
+        this.killPlayer(player, EffectNames.CLOUD);
+      }
+    });
+
+    // Update top player stats for dashboard
+    if (children.length > 0) {
+      const topPlayer = children[0] as Player;
+      const stats = topPlayer.getPlayersData();
+      const skinName = PLAYER_SKINS[stats.speciesId % PLAYER_SKINS.length];
+
+      gameStateBridge.updateTopPlayerStats({
+        id: topPlayer.id,
+        speciesName: skinName,
+        fitness: stats.fitness,
+        timeAlive: topPlayer.getTimeAlive(),
+        mobsKilled: topPlayer.getMobsKilled(),
+        itemsCollected: topPlayer.getItemsCollected(),
+        ammo: topPlayer.getAmmo(),
+      });
+    } else {
+      gameStateBridge.updateTopPlayerStats(null);
+    }
   };
 
   getPlayersData = (): PlayDataType =>

@@ -1,4 +1,5 @@
 import { PlayerNames } from '@/lib/constants';
+import { gameStateBridge } from '@/store/bridge';
 import {
   NodeType,
   type ConnectionGene,
@@ -45,6 +46,7 @@ export class NEATController {
   private readonly config: NEATConfig;
   private readonly genomeConfig: GenomeConfig;
   private readonly speciesConfig: SpeciesConfig;
+  private previousSpeciesStats = new Map<number, { fitness: number }>();
 
   constructor(config: NEATConfig) {
     this.config = config;
@@ -113,7 +115,9 @@ export class NEATController {
     }
 
     // Create initial connections (all inputs to all outputs)
-    let innovation = innovationTracker.getCurrentInnovation();
+    // IMPORTANT: For the initial population, the same structure MUST share the same innovation numbers
+    // so that speciation can correctly identify them as matching topology.
+    let currentInnov = 0;
     for (let i = 0; i < this.genomeConfig.inputCount; i++) {
       for (let j = 0; j < this.genomeConfig.outputCount; j++) {
         genome.connections.push({
@@ -121,12 +125,15 @@ export class NEATController {
           outNode: this.genomeConfig.inputCount + j,
           weight: Math.random() * 2 - 1,
           enabled: true,
-          innovation: innovation++,
+          innovation: currentInnov++,
         });
       }
     }
-    innovationTracker.setCurrentInnovation(innovation);
 
+    // Ensure the global innovation tracker starts AFTER the base connections
+    if (innovationTracker.getCurrentInnovation() < currentInnov) {
+      innovationTracker.setCurrentInnovation(currentInnov);
+    }
     return genome;
   }
 
@@ -158,6 +165,7 @@ export class NEATController {
           this.species.length,
           genome,
           this.speciesConfig,
+          this.generation,
         );
         this.species.push(newSpecies);
       }
@@ -196,7 +204,7 @@ export class NEATController {
     }
 
     this.speciesConfig.compatibilityThreshold = Math.max(
-      0.5,
+      0.2,
       Math.min(10, this.speciesConfig.compatibilityThreshold),
     );
   }
@@ -335,17 +343,78 @@ export class NEATController {
     });
 
     console.log('Species Breakdown:');
+    const speciesData = this.species
+      .sort((a, b) => b.averageFitness - a.averageFitness)
+      .map((s) => {
+        const prev = this.previousSpeciesStats.get(s.id);
+        const momentum: 'up' | 'down' | 'flat' = !prev
+          ? 'flat'
+          : s.averageFitness > prev.fitness + 1
+            ? 'up'
+            : s.averageFitness < prev.fitness - 1
+              ? 'down'
+              : 'flat';
+
+        // Calculate technical stats
+        const totalNodes = s.members.reduce(
+          (sum, g) => sum + g.nodes.length,
+          0,
+        );
+        const totalConns = s.members.reduce(
+          (sum, g) => sum + g.connections.filter((c) => c.enabled).length,
+          0,
+        );
+
+        return {
+          id: s.id,
+          name: PLAYER_SKINS[s.id % PLAYER_SKINS.length],
+          members: s.members.length,
+          avgFitness: s.averageFitness,
+          bestFitness: s.bestFitness,
+          stagnation: s.stagnation,
+          momentum,
+          bornGen: s.bornGeneration,
+          avgNodes: totalNodes / (s.members.length || 1),
+          avgConnections: totalConns / (s.members.length || 1),
+        };
+      });
+
+    // Update previous stats for next epoch
+    this.previousSpeciesStats.clear();
+    speciesData.forEach((s) => {
+      this.previousSpeciesStats.set(s.id, { fitness: s.avgFitness });
+    });
+
     console.table(
-      this.species
-        .sort((a, b) => b.averageFitness - a.averageFitness)
-        .map((s) => ({
-          Skin: PLAYER_SKINS[s.id % PLAYER_SKINS.length].toUpperCase(),
-          Members: s.members.length,
-          AvgFit: Math.floor(s.averageFitness),
-          Stagnant: s.stagnation,
-        })),
+      speciesData.map((s) => ({
+        Skin: s.name.toUpperCase(),
+        Members: s.members,
+        AvgFit: Math.floor(s.avgFitness),
+        Momentum: s.momentum,
+        Stagnant: s.stagnation,
+      })),
     );
     console.groupEnd();
+
+    const avgFitness =
+      this.population.reduce((sum, g) => sum + g.fitness, 0) /
+      (this.population.length || 1);
+
+    const totalComplexity = this.population.reduce(
+      (sum, g) => sum + g.connections.filter((c) => c.enabled).length,
+      0,
+    );
+    const avgComplexity = totalComplexity / (this.population.length || 1);
+
+    gameStateBridge.updateGenerationStats({
+      generation: this.generation,
+      speciesCount: this.species.length,
+      population: this.population.length,
+      bestFitness: Math.max(...this.population.map((g) => g.fitness)),
+      avgFitness,
+      avgComplexity,
+      species: speciesData,
+    });
   }
 
   // ... selectParent (unchanged) ...
@@ -440,6 +509,7 @@ export class NEATController {
           enabled: true,
           innovation: innovationTracker.getInnovation(source.id, target.id),
         });
+        genome.markTopologyDirty();
         return;
       }
     }
@@ -478,6 +548,7 @@ export class NEATController {
     };
 
     genome.connections.push(conn1, conn2);
+    genome.markTopologyDirty();
   }
 
   getPopulation(): { genome: Genome; speciesId: number }[] {
