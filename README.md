@@ -28,6 +28,15 @@ The core of Dashing Dot is a parallelized Genetic Algorithm:
 - **Deterministic World**: Spawns are driven by a seeded random generator, ensuring every agent in a generation faces the exact same challenge for fair evaluation.
 - **Survival of the Fittest**: Agents are ranked by fitness (distance + survival time). The best brains are selected, crossed over, and mutated to seed the next generation.
 
+### 👁 Lightweight Raycast Vision System
+Agents perceive their world through a high-performance **Custom Raycast Vision System** optimized for Arcade Physics:
+- **7-Ray FOV**: Agents "see" through a fan-shaped ray array (-45° to +45°), detecting distance and semantic object types (Platform, Mob, Item).
+- **Lightweight AABB Raycasting**: Uses Phaser's built-in `Geom.Intersects.GetLineToRectangle()` for direct line-rectangle intersection testing against arcade body bounds, avoiding plugin overhead.
+- **Per-Frame Target Building**: All active entities are collected and their body bounds cached once per frame for efficient ray intersection testing.
+- **Zero-Allocation Ring Buffer**: Input history uses a `Float32Array` ring buffer for O(1) updates with zero garbage collection pressure.
+- **Temporal Memory**: Each agent maintains a 3-frame input history (51 total inputs), allowing the neural network to perceive motion and predict trajectories.
+- **Visual Debugging**: Real-time sensory visualization allows you to see the agents' "consciousness" in action when debug mode is enabled.
+
 ### 👥 Multi-Player Shared World
 Unlike typical AI sims, Dashing Dot features a "Shared" environment:
 - **Ghosting & Transparency**: Active agents are rendered with dynamic alpha.
@@ -51,6 +60,7 @@ Unlike typical AI sims, Dashing Dot features a "Shared" environment:
 Built with the latest standards in web development:
 *   **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
 *   **Game Engine**: [Phaser 3](https://phaser.io/) (Arcade Physics)
+*   **Vision System**: Custom lightweight raycaster using Phaser's Geom.Intersects (optimized for AABB)
 *   **AI Engine**: [TensorFlow.js](https://www.tensorflow.org/js) (WASM Backend ready)
 *   **Language**: Strict [TypeScript](https://www.typescriptlang.org/)
 *   **State**: React 19 + Phaser Bridge
@@ -71,13 +81,16 @@ dashingdot/
 │   ├── NeuroEvolution/    # 🧬 The AI Core
 │   │   ├── NeuralNetwork.ts
 │   │   └── GeneticAlgorithm.ts
-│   ├── World/             # 🌍 Physics & Logic
+│   ├── Scenes/            # 🎬 Phaser Scenes
 │   │   ├── Play.ts        # The Heart of the Game
-│   │   ├── Player.ts      # Agent logic (Brain + Input)
+│   │   └── Pause.ts       # Pause overlay
+│   ├── World/             # 🌍 Physics & Logic
+│   │   ├── Player.ts      # Agent logic (Brain + Vision)
 │   │   ├── Mob.ts         # Shared Enemy obstacles
 │   │   ├── Item.ts        # Collectible items
 │   │   ├── Platform.ts    # Procedural grounds
 │   │   └── Projectile.ts  # Combat logic
+│   ├── types/             # 📝 TypeScript declarations
 │   └── ...
 ```
 

@@ -5,22 +5,23 @@ import {
   ItemNames,
   PlatformNames,
 } from '@/lib/constants';
+import { buildRaycastTargets, type RaycastTarget } from '@/lib/Raycaster';
 import effectConfig from '@/lib/sprite-configs/effect-config.json';
 import projectileConfig from '@/lib/sprite-configs/projectile-config.json';
 import { memory } from '@tensorflow/tfjs';
 import Phaser from 'phaser';
 import { v4 as uuidv4 } from 'uuid';
-import EffectManager from './World/EffectManager';
-import type Item from './World/Item';
-import ItemManager from './World/ItemManager';
-import type Mob from './World/Mob';
-import MobManager from './World/MobManager';
-import PlatformManager from './World/PlatformManager';
-import type Player from './World/Player';
-import type { EvolveableType } from './World/Player';
-import PlayerManager from './World/PlayerManager';
-import type Projectile from './World/Projectile';
-import ProjectileManager from './World/ProjectileManager';
+import EffectManager from '../World/EffectManager';
+import type Item from '../World/Item';
+import ItemManager from '../World/ItemManager';
+import type Mob from '../World/Mob';
+import MobManager from '../World/MobManager';
+import PlatformManager from '../World/PlatformManager';
+import type Player from '../World/Player';
+import type { EvolveableType } from '../World/Player';
+import PlayerManager from '../World/PlayerManager';
+import type Projectile from '../World/Projectile';
+import ProjectileManager from '../World/ProjectileManager';
 
 export interface PlayDataType {
   generation: number;
@@ -31,7 +32,9 @@ export interface PlayDataType {
 export type PlaySceneType = Phaser.Scene & {
   platformManager: PlatformManager;
   projectileManager: ProjectileManager;
-  getArea: () => number[];
+  mobManager: MobManager;
+  itemManager: ItemManager;
+  raycastTargets: RaycastTarget[];
 };
 
 class Play extends Phaser.Scene {
@@ -39,20 +42,20 @@ class Play extends Phaser.Scene {
   private seed!: string[];
 
   private platformManager!: PlatformManager;
-  private playerManager!: PlayerManager;
-  private mobManager!: MobManager;
-  private itemManager!: ItemManager;
+  public mobManager!: MobManager;
+  public itemManager!: ItemManager;
+  public playerManager!: PlayerManager;
   private effectManager!: EffectManager;
   public projectileManager!: ProjectileManager;
 
-  private playerCountText!: Phaser.GameObjects.Text;
-
+  private playerCountText?: Phaser.GameObjects.Text;
   private backgroundLayers: {
     sprite: Phaser.GameObjects.TileSprite;
     scrollFactor: number;
   }[] = [];
 
-  private area: number[] = [];
+  // Lightweight raycaster targets - rebuilt each frame
+  public raycastTargets: RaycastTarget[] = [];
 
   constructor() {
     super('Play');
@@ -94,6 +97,8 @@ class Play extends Phaser.Scene {
     this.mobManager = new MobManager(this, this.seed);
     this.itemManager = new ItemManager(this);
     this.projectileManager = new ProjectileManager(this);
+
+    // Initialize lightweight raycast targets (will be populated in update)
 
     this.platformManager = new PlatformManager(
       this,
@@ -182,28 +187,6 @@ class Play extends Phaser.Scene {
       });
     }
 
-    if (config.showGuides) {
-      config.guides.forEach((guide: number[]) => {
-        if (guide.length === 3) {
-          this.add
-            .rectangle(
-              guide[0],
-              this.scale.height * 0.8,
-              guide[1],
-              guide[2],
-              0x6666ff,
-            )
-            .setOrigin(0);
-        }
-      });
-    }
-
-    this.playerCountText = this.add.text(
-      10,
-      10,
-      `Active players: ${String(this.playerManager.getChildren().length)}`,
-    );
-
     this.createAnimations();
   };
 
@@ -224,31 +207,30 @@ class Play extends Phaser.Scene {
   };
 
   update = (): void => {
-    this.area = [];
-    const context = this.game.canvas.getContext('2d');
-    if (context !== null) {
-      config.guides.forEach((guide) =>
-        this.area.push(
-          ...Array.from(
-            context.getImageData(
-              guide[0] || 0,
-              this.scale.height * 0.8,
-              guide[1] || 0,
-              guide[2] || 0,
-            ).data,
-          ),
-        ),
-      );
-    }
-
     this.platformManager.update();
     const currentSpeed = this.platformManager.getCurrentSpeed();
     this.mobManager.update(this.time.now, this.game.loop.delta, currentSpeed);
     this.itemManager.update();
 
+    // Build raycast targets from all active entities (lightweight raycaster)
+    const activePlatforms = this.platformManager
+      .getGroup()
+      .getChildren()
+      .filter((obj) => obj.active);
+    const activeMobs = this.mobManager
+      .getChildren()
+      .filter((obj) => obj.active);
+    const activeItems = this.itemManager
+      .getChildren()
+      .filter((obj) => obj.active);
+
+    const allTargets = [...activePlatforms, ...activeMobs, ...activeItems];
+    this.raycastTargets = buildRaycastTargets(allTargets);
+
     // Only update transparency when necessary
     const playerCount = this.playerManager.countActive();
     if (
+      this.playerCountText &&
       this.playerCountText.text !== `Active players: ${String(playerCount)}`
     ) {
       const activePlayers = this.playerManager.getChildren() as Player[];
@@ -328,16 +310,11 @@ class Play extends Phaser.Scene {
       });
     });
 
-    // Load projectiles
+    // Load projectiles as full images (not spritesheets)
     projectileConfig.forEach((projConf) => {
-      this.load.spritesheet(projConf.id, projConf.assetPath, {
-        frameWidth: projConf.frameWidth,
-        frameHeight: projConf.frameHeight,
-      });
+      this.load.image(projConf.id, projConf.assetPath);
     });
   };
-
-  public getArea = (): number[] => this.area;
 }
 
 export default Play;

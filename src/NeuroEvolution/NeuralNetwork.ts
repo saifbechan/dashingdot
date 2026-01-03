@@ -31,10 +31,10 @@ export const clone = (network: Sequential): Sequential => {
 
 export const predict = (
   network: Sequential,
-  inputs: number[],
+  inputs: ArrayLike<number>,
 ): Uint8Array | Int32Array | Float32Array =>
   tidy(() => {
-    const xs = tensor2d([inputs]);
+    const xs = tensor2d([Array.from(inputs)]);
     const ys = network.predict(xs) as Tensor;
     return ys.dataSync();
   });

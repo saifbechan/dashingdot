@@ -1,14 +1,5 @@
-import config from '@/lib/config';
 import type { ProjectileNames } from '@/lib/constants';
 import Phaser from 'phaser';
-
-interface ProjectileConfig {
-  id: string;
-  frameWidth: number;
-  frameHeight: number;
-  frames: number;
-  assetPath: string;
-}
 
 export default class Projectile extends Phaser.Physics.Arcade.Sprite {
   public shooterId = '';
@@ -46,26 +37,10 @@ export default class Projectile extends Phaser.Physics.Arcade.Sprite {
       this.setVelocityX(1000); // Fast bullet
     }
 
-    const projConf = (config.projectileConfig as ProjectileConfig[]).find(
-      (p) => p.id === (name as string),
-    );
-
-    if (projConf) {
-      this.setScale(0.5);
-      const animKey = `${name}-anim`;
-      if (!this.scene.anims.exists(animKey)) {
-        this.scene.anims.create({
-          key: animKey,
-          frames: this.scene.anims.generateFrameNumbers(name, {
-            start: 0,
-            end: projConf.frames - 1,
-          }),
-          frameRate: 15,
-          repeat: -1,
-        });
-      }
-      this.anims.play(animKey);
-    }
+    // Projectiles are static images (300x50), not animated spritesheets
+    // Set origin to left side so bullet starts at spawn position
+    this.setOrigin(0, 0.5);
+    this.setScale(0.35); // Scale down the full image
   }
 
   preUpdate(time: number, delta: number): void {

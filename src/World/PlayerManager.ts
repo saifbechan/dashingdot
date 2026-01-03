@@ -10,7 +10,7 @@ import {
   select,
   speciate,
 } from '../NeuroEvolution/GeneticAlgorithm';
-import { type PlayDataType } from '../Play';
+import { type PlayDataType } from '../Scenes/Play';
 import type EffectManager from './EffectManager';
 import Player, { type EvolveableType } from './Player';
 

@@ -1,5 +1,5 @@
-import Pause from '@/Pause';
-import Play from '@/Play';
+import Pause from '@/Scenes/Pause';
+import Play from '@/Scenes/Play';
 import { v4 as uuidv4 } from 'uuid';
 import { type AnimationsNames, MobNames, PlayerNames } from './constants';
 import backgroundConfig from './sprite-configs/background-config.json';
@@ -86,17 +86,15 @@ const config = {
   allowedJumps: 1,
   showGuides: false,
 
-  guides: [[230, 400, 5]],
-
   model: {
-    inputs: 8003,
-    hidden: 10,
+    inputs: 51, // 17 features * 3 frames history
+    hidden: 24,
     outputs: 2,
   },
 
   evolution: {
     survivalRate: 0.1,
-    mutationRate: 0.5,
+    mutationRate: 0.1, // Lower mutation rate for larger stable brains
   },
 
   game,
