@@ -1,0 +1,58 @@
+[
+  {
+    "id": "plasma-bolt",
+    "frameWidth": 50,
+    "frameHeight": 50,
+    "frames": 6,
+    "assetPath": "images/projectiles/plasma-bolt.png"
+  },
+  {
+    "id": "laser-beam",
+    "frameWidth": 50,
+    "frameHeight": 50,
+    "frames": 6,
+    "assetPath": "images/projectiles/laser-beam.png"
+  },
+  {
+    "id": "proton-shot",
+    "frameWidth": 50,
+    "frameHeight": 50,
+    "frames": 6,
+    "assetPath": "images/projectiles/proton-shot.png"
+  },
+  {
+    "id": "neutron-star",
+    "frameWidth": 50,
+    "frameHeight": 50,
+    "frames": 6,
+    "assetPath": "images/projectiles/neutron-star.png"
+  },
+  {
+    "id": "void-orb",
+    "frameWidth": 50,
+    "frameHeight": 50,
+    "frames": 6,
+    "assetPath": "images/projectiles/void-orb.png"
+  },
+  {
+    "id": "cyber-pulse",
+    "frameWidth": 50,
+    "frameHeight": 50,
+    "frames": 6,
+    "assetPath": "images/projectiles/cyber-pulse.png"
+  },
+  {
+    "id": "fusion-core",
+    "frameWidth": 50,
+    "frameHeight": 50,
+    "frames": 6,
+    "assetPath": "images/projectiles/fusion-core.png"
+  },
+  {
+    "id": "quantum-ray",
+    "frameWidth": 50,
+    "frameHeight": 50,
+    "frames": 6,
+    "assetPath": "images/projectiles/quantum-ray.png"
+  }
+]

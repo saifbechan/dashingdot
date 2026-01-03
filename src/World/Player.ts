@@ -1,7 +1,8 @@
 import config from '@/lib/config';
-import { type PlayerNames } from '@/lib/constants';
+import { type PlayerNames, type ProjectileNames } from '@/lib/constants';
 import { type Sequential } from '@tensorflow/tfjs';
 import Phaser from 'phaser';
+import { v4 as uuidv4 } from 'uuid';
 import { predict } from '../NeuroEvolution/NeuralNetwork';
 import { type PlaySceneType } from '../Play';
 
@@ -11,10 +12,16 @@ export interface EvolveableType {
 }
 
 class Player extends Phaser.Physics.Arcade.Sprite {
+  public readonly id: string;
   private readonly brain: Sequential;
 
   private timeAlive = 0;
   private totalSteps = 0;
+
+  private ammo = 0;
+  private projectileType: ProjectileNames;
+  private lastShootTime = 0;
+  private shootDelay = 250; // ms
 
   constructor(
     scene: Phaser.Scene,
@@ -22,10 +29,13 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     y: number,
     brain: Sequential,
     name: PlayerNames,
+    projectileType: ProjectileNames,
   ) {
     super(scene, x, y, name);
 
+    this.id = uuidv4();
     this.setName(name);
+    this.projectileType = projectileType;
 
     const { gravity } = config;
 
@@ -102,7 +112,30 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     } else {
       this.anims.play('fly', true);
     }
+
+    if (this.shouldShoot() && time > this.lastShootTime + this.shootDelay) {
+      this.shoot(time);
+    }
   };
+
+  private shoot(time: number): void {
+    if (this.ammo <= 0) return;
+
+    this.ammo -= 1;
+    this.lastShootTime = time;
+
+    const scene = this.scene as PlaySceneType;
+    scene.projectileManager.spawnProjectile(
+      this.x + 20,
+      this.y,
+      this.projectileType,
+      this.id,
+    );
+  }
+
+  public addAmmo(amount: number): void {
+    this.ammo += amount;
+  }
 
   private shouldJump = (): boolean => {
     if ((this.scene as PlaySceneType).getArea().length === 0) return false;
@@ -110,7 +143,16 @@ class Player extends Phaser.Physics.Arcade.Sprite {
       this.brain,
       this.getInputs(this.scene as PlaySceneType),
     );
-    return prediction[0] > prediction[1];
+    return prediction[0] > 0.5;
+  };
+
+  private shouldShoot = (): boolean => {
+    if ((this.scene as PlaySceneType).getArea().length === 0) return false;
+    const prediction = predict(
+      this.brain,
+      this.getInputs(this.scene as PlaySceneType),
+    );
+    return prediction[1] > 0.5;
   };
 
   private getInputs = (scene: PlaySceneType): number[] => {

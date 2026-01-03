@@ -2,12 +2,17 @@ import Pause from '@/Pause';
 import Play from '@/Play';
 import { v4 as uuidv4 } from 'uuid';
 import { type AnimationsNames, MobNames, PlayerNames } from './constants';
-import mobConfig from './mob-config.json';
-import playerConfig from './player-config.json';
+import backgroundConfig from './sprite-configs/background-config.json';
+import itemConfig from './sprite-configs/item-config.json';
+import mobConfig from './sprite-configs/mob-config.json';
+import playerConfig from './sprite-configs/player-config.json';
+import projectileConfig from './sprite-configs/projectile-config.json';
 
 const playerNames = Object.values(PlayerNames);
 const mobNames = Object.values(MobNames);
 
+const randomBackground =
+  backgroundConfig[Math.floor(Math.random() * backgroundConfig.length)];
 const randomMob = mobNames[Math.floor(Math.random() * mobNames.length)];
 const randomPlayer =
   playerNames[Math.floor(Math.random() * playerNames.length)];
@@ -25,7 +30,7 @@ const game: Phaser.Types.Core.GameConfig = {
   physics: {
     default: 'arcade',
     arcade: {
-      debug: true,
+      debug: false,
     },
   },
   fps: { min: 20, target: 30 },
@@ -61,9 +66,13 @@ const mobs: {
 const config = {
   selectedPlayer: randomPlayer,
   selectedMob: randomMob,
+  selectedBackground: randomBackground,
   playerConfig,
   mobConfig,
-  playerCount: 1,
+  itemConfig,
+  projectileConfig,
+  backgroundConfig,
+  playerCount: 50,
 
   platformStartSpeed: 350,
   platformSpeedThreshold: 500,
