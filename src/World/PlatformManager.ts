@@ -16,6 +16,7 @@ export default class PlatformManager {
 
   private step = 0;
   private platformBag: PlatformNames[] = [];
+  private platformsSpawned = 0;
   private itemManager: ItemManager | undefined;
 
   constructor(scene: Phaser.Scene, seed: string[], itemManager?: ItemManager) {
@@ -146,6 +147,8 @@ export default class PlatformManager {
       this.group.add(platform);
     }
 
+    this.platformsSpawned += 1;
+
     this.nextPlatformDistance = this.rnd.between(
       config.spawnRange[0] ?? 100,
       config.spawnRange[1] ?? 200,
@@ -155,4 +158,6 @@ export default class PlatformManager {
   getGroup = (): Phaser.GameObjects.Group => this.group;
 
   getCurrentSpeed = (): number => this.platformSpeed;
+
+  getPlatformsSpawned = (): number => this.platformsSpawned;
 }

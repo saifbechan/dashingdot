@@ -57,7 +57,15 @@ class Play extends Phaser.Scene {
   private backgroundLayers: {
     sprite: Phaser.GameObjects.TileSprite;
     scrollFactor: number;
+    bgId: string;
   }[] = [];
+
+  // Background transition state
+  private currentBackgroundIndex = 0;
+  private lastBackgroundChangePlatform = 0;
+  private isTransitioning = false;
+  private readonly PLATFORMS_PER_BACKGROUND = 10;
+  private readonly TRANSITION_DURATION = 1500; // ms
 
   // Lightweight raycaster targets - cached and updated in-place when possible
   public raycastTargets: RaycastTarget[] = [];
@@ -84,19 +92,24 @@ class Play extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
 
-    // Create Background Layers
-    const bgConfig = config.selectedBackground;
-    bgConfig.layers.forEach((layer) => {
-      const bg = this.add
-        .tileSprite(0, 0, width, height, `${bgConfig.id}-${layer.image}`)
-        .setOrigin(0, 0)
-        .setScrollFactor(0);
+    // Create Background Layers for ALL backgrounds (for smooth transitions)
+    // Each background's layers are created but only the first background is visible initially
+    config.backgroundConfig.forEach((bgConfig, bgIndex) => {
+      bgConfig.layers.forEach((layer) => {
+        const bg = this.add
+          .tileSprite(0, 0, width, height, `${bgConfig.id}-${layer.image}`)
+          .setOrigin(0, 0)
+          .setScrollFactor(0)
+          .setAlpha(bgIndex === 0 ? 1 : 0); // Only first background visible
 
-      this.backgroundLayers.push({
-        sprite: bg,
-        scrollFactor: layer.scrollFactor,
+        this.backgroundLayers.push({
+          sprite: bg,
+          scrollFactor: layer.scrollFactor,
+          bgId: bgConfig.id,
+        });
       });
     });
+    this.currentBackgroundIndex = 0;
 
     this.effectManager = new EffectManager(this);
     this.mobManager = new MobManager(this, this.seed);
@@ -276,6 +289,16 @@ class Play extends Phaser.Scene {
         speed * bg.scrollFactor * (this.game.loop.delta / 1000);
     });
 
+    // Check for background transition every 10 platforms
+    const platformsSpawned = this.platformManager.getPlatformsSpawned();
+    if (
+      !this.isTransitioning &&
+      platformsSpawned - this.lastBackgroundChangePlatform >=
+        this.PLATFORMS_PER_BACKGROUND
+    ) {
+      this.transitionToNextBackground();
+    }
+
     if (playerCount === 0) {
       this.scene.start('Play', {
         ...this.playerManager.getPlayersData(),
@@ -283,6 +306,58 @@ class Play extends Phaser.Scene {
         seed: this.seed,
       } as PlayDataType);
     }
+  };
+
+  /**
+   * Smoothly transitions to the next background theme
+   * Uses crossfade: current fades out while next fades in
+   */
+  private transitionToNextBackground = (): void => {
+    if (this.isTransitioning) return;
+
+    const bgConfigs = config.backgroundConfig;
+    const currentBgId = bgConfigs[this.currentBackgroundIndex].id;
+    const nextBackgroundIndex =
+      (this.currentBackgroundIndex + 1) % bgConfigs.length;
+    const nextBgId = bgConfigs[nextBackgroundIndex].id;
+
+    this.isTransitioning = true;
+
+    // Get layers for current and next backgrounds
+    const currentLayers = this.backgroundLayers.filter(
+      (bg) => bg.bgId === currentBgId,
+    );
+    const nextLayers = this.backgroundLayers.filter(
+      (bg) => bg.bgId === nextBgId,
+    );
+
+    // Fade out current background layers
+    currentLayers.forEach((bg) => {
+      this.tweens.add({
+        targets: bg.sprite,
+        alpha: 0,
+        duration: this.TRANSITION_DURATION,
+        ease: 'Sine.easeInOut',
+      });
+    });
+
+    // Fade in next background layers
+    nextLayers.forEach((bg) => {
+      this.tweens.add({
+        targets: bg.sprite,
+        alpha: 1,
+        duration: this.TRANSITION_DURATION,
+        ease: 'Sine.easeInOut',
+      });
+    });
+
+    // Update state after transition completes
+    this.time.delayedCall(this.TRANSITION_DURATION, () => {
+      this.currentBackgroundIndex = nextBackgroundIndex;
+      this.lastBackgroundChangePlatform =
+        this.platformManager.getPlatformsSpawned();
+      this.isTransitioning = false;
+    });
   };
 
   preload = (): void => {
@@ -297,10 +372,11 @@ class Play extends Phaser.Scene {
       });
     });
 
-    // Load selected background layers
-    const bgConfig = config.selectedBackground;
-    bgConfig.layers.forEach((layer) => {
-      this.load.image(`${bgConfig.id}-${layer.image}`, layer.path);
+    // Load ALL background layers for smooth transitions
+    config.backgroundConfig.forEach((bgConfig) => {
+      bgConfig.layers.forEach((layer) => {
+        this.load.image(`${bgConfig.id}-${layer.image}`, layer.path);
+      });
     });
 
     // Load ALL player skins (for species-based visual speciation)
