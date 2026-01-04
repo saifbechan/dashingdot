@@ -54,6 +54,10 @@ class Play extends Phaser.Scene {
   public projectileManager!: ProjectileManager;
 
   private playerCountText?: Phaser.GameObjects.Text;
+  private countdownLabel?: Phaser.GameObjects.Text;
+  private countdownNumber?: Phaser.GameObjects.Text;
+  private countdownContainer?: Phaser.GameObjects.Container;
+  private countdownBrush?: Phaser.GameObjects.Image;
   private backgroundLayers: {
     sprite: Phaser.GameObjects.TileSprite;
     scrollFactor: number;
@@ -71,6 +75,8 @@ class Play extends Phaser.Scene {
   public raycastTargets: RaycastTarget[] = [];
   private lastRaycastTargetCount = 0;
 
+  private isNextGenerationStarting = false;
+
   constructor() {
     super('Play');
   }
@@ -81,6 +87,7 @@ class Play extends Phaser.Scene {
   }: Partial<PlayDataType> = {}): void => {
     this.generation = generation;
     this.seed = seed;
+    this.isNextGenerationStarting = false;
 
     console.table({
       generation,
@@ -214,6 +221,10 @@ class Play extends Phaser.Scene {
     }
 
     this.createAnimations();
+
+    // Pre-load custom fonts to avoid flickering when they are first used
+    this.add.text(0, 0, '', { fontFamily: 'Osake' }).setAlpha(0);
+    this.add.text(0, 0, '', { fontFamily: 'Shikamaru' }).setAlpha(0);
   };
 
   createAnimations = (): void => {
@@ -299,12 +310,88 @@ class Play extends Phaser.Scene {
       this.transitionToNextBackground();
     }
 
-    if (playerCount === 0) {
-      this.scene.start('Play', {
-        ...this.playerManager.getPlayersData(),
-        generation: this.generation + 1,
-        seed: this.seed,
-      } as PlayDataType);
+    if (playerCount === 0 && !this.isNextGenerationStarting) {
+      this.isNextGenerationStarting = true;
+
+      const { width, height } = this.scale;
+      const fontSize = '56px';
+      const fontFamily = 'Osake';
+
+      // Create Label (Black)
+      this.countdownLabel = this.add.text(0, 0, 'New generation starting in ', {
+        fontFamily,
+        fontSize,
+        color: '#000000',
+      });
+
+      // Create Number (Red)
+      this.countdownNumber = this.add.text(
+        this.countdownLabel.width,
+        0,
+        '3...',
+        {
+          fontFamily,
+          fontSize,
+          color: '#ffffff',
+        },
+      );
+
+      // Calculate total width
+      const totalWidth = this.countdownLabel.width + this.countdownNumber.width;
+
+      // Create Brush Stroke (Behind)
+      this.countdownBrush = this.add
+        .image(0, 35, 'brush-stroke')
+        .setDisplaySize(totalWidth * 1.1, 100)
+        .setAlpha(0.9);
+
+      // Group in container for easy centering
+      this.countdownContainer = this.add.container(width / 2, height / 2, [
+        this.countdownBrush,
+        this.countdownLabel,
+        this.countdownNumber,
+      ]);
+
+      // Center the container's contents
+      this.countdownLabel.setX(-totalWidth / 2);
+      this.countdownNumber.setX(-totalWidth / 2 + this.countdownLabel.width);
+      this.countdownBrush.setX(0); // Center within the container
+
+      this.countdownContainer.setAlpha(0).setDepth(1000);
+
+      // Fade in and pulse animation
+      this.tweens.add({
+        targets: this.countdownContainer,
+        alpha: 1,
+        duration: 500,
+        ease: 'Sine.easeOut',
+      });
+
+      this.tweens.add({
+        targets: this.countdownContainer,
+        scale: 1.1,
+        duration: 500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+
+      // Update countdown numbers
+      this.time.delayedCall(1000, () => {
+        if (this.countdownNumber) this.countdownNumber.setText('2...');
+      });
+
+      this.time.delayedCall(2000, () => {
+        if (this.countdownNumber) this.countdownNumber.setText('1...');
+      });
+
+      this.time.delayedCall(3000, () => {
+        this.scene.start('Play', {
+          ...this.playerManager.getPlayersData(),
+          generation: this.generation + 1,
+          seed: this.seed,
+        } as PlayDataType);
+      });
     }
   };
 
@@ -411,6 +498,8 @@ class Play extends Phaser.Scene {
     projectileConfig.forEach((projConf) => {
       this.load.image(projConf.id, projConf.assetPath);
     });
+
+    this.load.image('brush-stroke', 'images/brush_stroke_red.png');
   };
 }
 
