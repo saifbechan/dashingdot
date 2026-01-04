@@ -1,59 +1,55 @@
-# ⚡️ Dashing Dot
+# ⚡️ Dashing Dot - NEAT Edition
 
-> **An AI-powered multi-agent survival runner where neural networks evolve to outjump, outshoot, and outlast a cybernetic onslaught.**
+> **An AI-powered multi-agent survival runner where neural networks evolve using NEAT (NeuroEvolution of Augmenting Topologies) to outjump, outshoot, and outlast a cybernetic onslaught.**
 
 ![Project Status](https://img.shields.io/badge/Status-Active_Development-green)
-![Tech Stack](https://img.shields.io/badge/Stack-Next.js_|_Phaser_|_TensorFlow.js-blue)
+![Tech Stack](https://img.shields.io/badge/Stack-Next.js_|_Phaser_|_NEAT-blue)
 ![License](https://img.shields.io/badge/License-MIT-purple)
 
-**Dashing Dot** is a high-performance, web-based simulation where you don't play the game—you evolve the intelligence behind it. Using **NeuroEvolution (Genetic Algorithms + Neural Networks)**, a population of agents learns to navigate a procedurally generated, deterministic world.
+**Dashing Dot** is a high-performance, web-based simulation where you don't play the game—you evolve the intelligence behind it. Using a custom **NEAT** engine, a population of agents learns to navigate a procedurally generated, deterministic world by evolving their neural network topology from scratch.
 
 ---
 
 ## 🚀 The Path of Evolution
 
 Watch as generation after generation of "Runners" attempt to survive the gauntlet.
-- **Generation 1 👶**: Total chaos. They run into walls, fall into pits, and die instantly.
-- **Generation 10 🏃**: Basics mastered. They've learned to jump over gaps and stand on platforms.
-- **Generation 30 🔫**: Combat training. They begin to pick up powerups and blast **Viruses** out of their path.
-- **Generation 50+ 🤖**: Mastery. They dodge, shoot, and navigate with frame-perfect precision.
+- **Gen 1 👶**: Total chaos. 160 players (simple single-layer brains) run into walls and die instantly.
+- **Gen 10 🏃**: Speciation occurs. Distinct species (visualized by 8 unique skins) emerge with different strategies.
+- **Gen 30 🔫**: Complex behaviors. New neural connections evolve, allowing agents to shoot **Viruses** and collect items.
+- **Gen 50+ 🤖**: Mastery. Complex networks with optimized topologies navigate with frame-perfect precision.
 
 ---
 
 ## ✨ Key Features
 
-### 🧠 Neuro-Evolutionary AI
-The core of Dashing Dot is a parallelized Genetic Algorithm:
-- **Neural Networks**: Each player is powered by a `tf.layers.dense` model using **TensorFlow.js**, predicting both `JUMP` and `SHOOT` actions.
-- **Deterministic World**: Spawns are driven by a seeded random generator, ensuring every agent in a generation faces the exact same challenge for fair evaluation.
-- **Survival of the Fittest**: Agents are ranked by fitness (distance + survival time). The best brains are selected, crossed over, and mutated to seed the next generation.
+### 🧠 Pure NEAT AI System
+Replacing fixed-topology networks, this engine implements **NeuroEvolution of Augmenting Topologies**:
+- **Dynamic Topology**: Brains start minimal (inputs → outputs) and mutually evolve mostly by adding new structure (nodes & connections).
+- **Speciation**: The population is partitioned into species based on genomic compatibility. This protects new innovations (like a new node) from being competed out of existence too early.
+- **Visual Speciation**: Each of the **8 Player Skins** represents a distinct biological species. Watch them compete for dominance!
+- **Genome Pooling**: Optimized object pooling system handles 160+ genomes per generation with zero garbage collection spikes.
+
+### 👁 Lightweight Raycast Vision System
+Agents perceive their world through a high-performance **Custom Raycast Vision System**:
+- **7-Ray FOV**: Agents "see" via a fan-shaped array (-45° to +45°), detecting distance and semantic object types (Platform, Mob, Item).
+- **Zero-Allocation**: Uses `Float32Array` ring buffers for input history and `Phaser.Geom` for math, avoiding allocation overhead.
+- **Temporal Memory**: 3-frame input history allows the network to perceive velocity and trajectory.
 
 ### 👥 Multi-Player Shared World
-Unlike typical AI sims, Dashing Dot features a "Shared" environment:
-- **Ghosting & Transparency**: Active agents are rendered with dynamic alpha.
-- **Collaborative Obstacles**: Mobs and Items are shared. An item is only "collected" once every alive player has touched it, fading out as collection progress increases.
-- **Individual Defense**: Mobs only "die" for the specific player that shot them, but their collective transparency reflects how many agents have successfully cleared that threat.
-
-### 🔫 Combat & Powerups
-- **Zero-Ammo Start**: Players start with an empty magazine.
-- **Powerups**: Collecting a powerup (found on blue platforms) grants **+5 ammo**.
-- **Projectiles**: Each player is assigned a randomized unique projectile type (*Plasma Bolt, Void Orb, Laser Beam, etc.*) to clear their own path through enemy swarms.
-
-### 🎨 Premium Cyberpunk Aesthetics
-- **Parallax Backgrounds**: Multi-layered, high-definition backgrounds with independent scroll factors.
-- **Visual Effects**: Centralized `EffectManager` handling pooled sparkles, burn effects, and death clouds.
-- **Modern UI**: Clean, responsive layout with glassmorphism and real-time generation stats.
+- **Ghosting & Transparency**: Active agents are rendered with dynamic alpha to visualize density.
+- **Collaborative/Competitive**: Mobs and Items are shared. An item is collected by the first successful agent, but mobs require individual shots.
+- **Performance Optimized**: Runs 160 agents at 60fps on modern hardware.
 
 ---
 
 ## 🛠 Tech Stack
 
-Built with the latest standards in web development:
+Built with the latest standards:
 *   **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
 *   **Game Engine**: [Phaser 3](https://phaser.io/) (Arcade Physics)
-*   **AI Engine**: [TensorFlow.js](https://www.tensorflow.org/js) (WASM Backend ready)
+*   **AI Engine**: Custom Pure TypeScript NEAT Implementation (No TF.js)
+*   **Performance**: Object Pooling, TypedArrays, Singleton Controllers
 *   **Language**: Strict [TypeScript](https://www.typescriptlang.org/)
-*   **State**: React 19 + Phaser Bridge
 
 ---
 
@@ -61,24 +57,24 @@ Built with the latest standards in web development:
 
 ```bash
 dashingdot/
-├── public/images/         # 🖼 High-quality game assets
 ├── src/
-│   ├── app/               # 🌐 Next.js Page Structure
-│   ├── lib/
-│   │   ├── sprite-configs/# ⚙️ JSON Metadata for all entities
-│   │   ├── config.ts      # 🛠 Global simulation settings
-│   │   └── constants.ts   # 🏷 Enums and shared keys
-│   ├── NeuroEvolution/    # 🧬 The AI Core
-│   │   ├── NeuralNetwork.ts
-│   │   └── GeneticAlgorithm.ts
-│   ├── World/             # 🌍 Physics & Logic
-│   │   ├── Play.ts        # The Heart of the Game
-│   │   ├── Player.ts      # Agent logic (Brain + Input)
-│   │   ├── Mob.ts         # Shared Enemy obstacles
-│   │   ├── Item.ts        # Collectible items
-│   │   ├── Platform.ts    # Procedural grounds
-│   │   └── Projectile.ts  # Combat logic
-│   └── ...
+│   ├── AI/                # 🧬 NEAT Core
+│   │   ├── NEAT/          
+│   │   │   ├── Genome.ts      # Neural Network Graph
+│   │   │   ├── Species.ts     # Evolutionary Species
+│   │   │   ├── index.ts       # Main Controller
+│   │   │   ├── GenomePool.ts  # Memory Optimization
+│   │   │   └── instance.ts    # Singleton Persistence
+│   │   └── utils/
+│   ├── Game/              # 🎮 Game Logic
+│   │   ├── entities/      # Player, Mob, Platform, etc.
+│   │   ├── scenes/        # Play, Pause
+│   │   └── managers/      # ItemManager, MobManager...
+│   ├── config/            # ⚙️ Configuration
+│   │   ├── game.config.ts
+│   │   └── evolution.config.ts # NEAT Hyperparameters
+│   ├── app/               # 🌐 Next.js Pages
+│   └── components/        # React Bridge
 ```
 
 ---
@@ -97,21 +93,8 @@ dashingdot/
     ```
     Open [localhost:3000](http://localhost:3000) to witness the evolution.
 
-3.  **Simulation Controls**:
-    - **Press `P`**: Pause/Resume the simulation.
-    - **Edit `src/lib/config.ts`**: Toggle `debug: true` to see physics hitboxes and AI input guides.
-
----
-
-## 🧪 Development Commands
-
-| Script | Purpose |
-| :--- | :--- |
-| `npm run dev` | High-speed development with Turbopack |
-| `npm run type-check` | Validate strict TypeScript types |
-| `npm run lint` | Enforce Airbnb-style coding standards |
-| `npm test` | Run Jest unit tests |
-| `npm run test:e2e` | Run Playwright browser tests |
+3.  **Tuning**:
+    - Edit `src/config/` to adjust mutation rates, population size (default 160), or speciation thresholds.
 
 ---
 

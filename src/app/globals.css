@@ -1,9 +1,122 @@
-html,
-body {
-  margin: 0;
-  padding: 0;
+@font-face {
+  font-family: 'Osake';
+  src: url('/fonts/osake/Osake.otf') format('opentype'),
+       url('/fonts/osake/Osake.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
 }
 
-canvas {
-  margin: 0 !important;
+@font-face {
+  font-family: 'Shikamaru';
+  src: url('/fonts/shikamaru/Shikamaru.otf') format('opentype'),
+       url('/fonts/shikamaru/Shikamaru.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/* 
+ * MODERN SCIENTIFIC INFOGRAPHIC THEME - TAILWIND V4
+ */
+
+@theme {
+  --color-background: #01040a;
+  --color-foreground: #f0f6fc;
+  
+  --color-card: rgba(13, 17, 23, 0.7);
+  --color-card-foreground: #f0f6fc;
+  
+  --color-popover: #0d1117;
+  --color-popover-foreground: #f0f6fc;
+  
+  --color-primary: #38bdf8;
+  --color-primary-foreground: #01040a;
+  
+  --color-secondary: #21262d;
+  --color-secondary-foreground: #f0f6fc;
+  
+  --color-muted: #161b22;
+  --color-muted-foreground: #8b949e;
+  
+  --color-accent: #bc8cff;
+  --color-accent-foreground: #f0f6fc;
+  
+  --color-destructive: #ff7b72;
+  --color-destructive-foreground: #f0f6fc;
+  
+  --color-border: #30363d;
+  --color-input: #30363d;
+  --color-ring: #38bdf8;
+
+  --color-viz-cyan: #00e5ff;
+  --color-viz-pink: #ff007f;
+  --color-viz-purple: #9d00ff;
+  --color-viz-orange: #ff9100;
+  --color-viz-green: #00ff88;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  
+  --animate-spin-slow: spin 8s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+}
+
+@layer base {
+  *, ::after, ::before {
+    @apply border-border;
+  }
+  
+  html {
+    color-scheme: dark;
+    background-color: #01040a !important;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    padding: 0;
+    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    background-color: #01040a !important;
+    color: #f0f6fc !important;
+  }
+  
+  canvas {
+    margin: 0 !important;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(13, 17, 23, 0.7) !important;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+  }
+  
+  .glow-cyan {
+    box-shadow: 0 0 20px -5px rgba(0, 229, 255, 0.5);
+  }
+  
+  .glow-pink {
+    box-shadow: 0 0 20px -5px rgba(255, 0, 127, 0.5);
+  }
+  
+  .dot-grid {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
 }
