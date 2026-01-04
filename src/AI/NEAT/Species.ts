@@ -50,6 +50,8 @@ export class Species {
    * δ = (c1 * E / N) + (c2 * D / N) + (c3 * W̄)
    *
    * E = excess genes, D = disjoint genes, W̄ = average weight difference
+   *
+   * Optimized: O(n + m) merge algorithm instead of O(maxInnovation)
    */
   static compatibilityDistance(
     genome1: Genome,
@@ -62,45 +64,40 @@ export class Species {
       weightDifferenceCoefficient,
     } = config;
 
-    // Get all innovation numbers from both genomes
-    const innovations1 = new Map(
-      genome1.connections.map((c) => [c.innovation, c]),
-    );
-    const innovations2 = new Map(
-      genome2.connections.map((c) => [c.innovation, c]),
-    );
+    const conns1 = genome1.connections;
+    const conns2 = genome2.connections;
 
-    // Find max innovation in each genome
-    const maxInnovation1 = Math.max(
-      ...genome1.connections.map((c) => c.innovation),
-      0,
-    );
-    const maxInnovation2 = Math.max(
-      ...genome2.connections.map((c) => c.innovation),
-      0,
-    );
-    const maxInnovation = Math.max(maxInnovation1, maxInnovation2);
+    // Find max innovations without spread operator (avoids array allocation)
+    let maxInnovation1 = 0;
+    for (const c of conns1) {
+      if (c.innovation > maxInnovation1) maxInnovation1 = c.innovation;
+    }
+    let maxInnovation2 = 0;
+    for (const c of conns2) {
+      if (c.innovation > maxInnovation2) maxInnovation2 = c.innovation;
+    }
+    const smallerMax = Math.min(maxInnovation1, maxInnovation2);
+
+    // Build innovation -> connection map for genome2
+    const innovations2 = new Map(conns2.map((c) => [c.innovation, c]));
 
     let excess = 0;
     let disjoint = 0;
     let weightDiff = 0;
     let matchingCount = 0;
 
-    // Iterate through all possible innovations
-    for (let i = 0; i <= maxInnovation; i++) {
-      const gene1 = innovations1.get(i);
-      const gene2 = innovations2.get(i);
+    // Iterate through genome1's connections
+    for (const gene1 of conns1) {
+      const gene2 = innovations2.get(gene1.innovation);
 
-      if (gene1 && gene2) {
+      if (gene2) {
         // Matching gene
         matchingCount++;
         weightDiff += Math.abs(gene1.weight - gene2.weight);
-      } else if (gene1 || gene2) {
-        // Gene exists in only one genome
-        const innovation = gene1 ? gene1.innovation : (gene2?.innovation ?? 0);
-        const smallerMax = Math.min(maxInnovation1, maxInnovation2);
-
-        if (innovation > smallerMax) {
+        innovations2.delete(gene1.innovation); // Mark as processed
+      } else {
+        // Gene only in genome1
+        if (gene1.innovation > smallerMax) {
           excess++;
         } else {
           disjoint++;
@@ -108,12 +105,17 @@ export class Species {
       }
     }
 
+    // Remaining genes in innovations2 are only in genome2
+    for (const [innovation] of innovations2) {
+      if (innovation > smallerMax) {
+        excess++;
+      } else {
+        disjoint++;
+      }
+    }
+
     // Normalize by larger genome size (N)
-    const N = Math.max(
-      genome1.connections.length,
-      genome2.connections.length,
-      1,
-    );
+    const N = Math.max(conns1.length, conns2.length, 1);
     const avgWeightDiff = matchingCount > 0 ? weightDiff / matchingCount : 0;
 
     return (
@@ -161,9 +163,13 @@ export class Species {
 
   /**
    * Update stagnation and check if species should be eliminated
+   * Optimized: avoid spread operator allocation
    */
   updateStagnation(): boolean {
-    const currentBest = Math.max(...this.members.map((m) => m.fitness));
+    let currentBest = 0;
+    for (const m of this.members) {
+      if (m.fitness > currentBest) currentBest = m.fitness;
+    }
 
     if (currentBest > this.bestFitness) {
       this.bestFitness = currentBest;
@@ -212,9 +218,11 @@ export class Species {
 
   /**
    * Get sorted members by fitness (descending)
+   * Sorts in-place to avoid array allocation - caller should not modify result
    */
   getSortedMembers(): Genome[] {
-    return [...this.members].sort((a, b) => b.fitness - a.fitness);
+    this.members.sort((a, b) => b.fitness - a.fitness);
+    return this.members;
   }
 
   /**

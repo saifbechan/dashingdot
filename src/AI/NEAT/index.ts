@@ -14,6 +14,9 @@ import { Species, type SpeciesConfig } from './Species';
 // Map species ID to player skin name
 const PLAYER_SKINS = Object.values(PlayerNames);
 
+// Debug flag for console logging - disable in production for performance
+const DEBUG_NEAT = process.env.NODE_ENV === 'development';
+
 export interface NEATConfig {
   populationSize: number;
   inputCount: number;
@@ -31,6 +34,7 @@ export interface NEATConfig {
 
   // Evolution rates
   survivalRate: number;
+  interspeciesCrossoverRate: number; // Probability of breeding across species
   mutationRates: {
     weight: number;
     node: number;
@@ -279,8 +283,26 @@ export class NEATController {
         i < offspring && newPopulation.length < this.config.populationSize;
         i++
       ) {
-        const parent1 = this.selectParent(survivors);
-        const parent2 = this.selectParent(survivors);
+        const parent1 = this.tournamentSelect(survivors);
+        let parent2: Genome;
+
+        // Interspecies crossover for genetic diversity
+        if (
+          Math.random() < this.config.interspeciesCrossoverRate &&
+          this.species.length > 1
+        ) {
+          // Pick a random different species
+          const otherSpecies = this.species.filter((s) => s.id !== species.id);
+          if (otherSpecies.length > 0) {
+            const randomOther =
+              otherSpecies[Math.floor(Math.random() * otherSpecies.length)];
+            parent2 = this.tournamentSelect(randomOther.members);
+          } else {
+            parent2 = this.tournamentSelect(survivors);
+          }
+        } else {
+          parent2 = this.tournamentSelect(survivors);
+        }
 
         let child: Genome;
         if (parent1 === parent2) {
@@ -332,17 +354,25 @@ export class NEATController {
       genomePool.release(g);
     });
 
-    console.groupCollapsed(`NEAT Generation ${String(this.generation)}`);
-    console.table({
-      generation: this.generation,
-      species: this.species.length,
-      population: this.population.length,
-      bestFitness: Math.floor(
-        Math.max(...this.population.map((g) => g.fitness)),
-      ),
-    });
+    // Calculate best fitness without spread operator (avoids array allocation)
+    let bestFitness = 0;
+    for (const g of this.population) {
+      if (g.fitness > bestFitness) bestFitness = g.fitness;
+    }
 
-    console.log('Species Breakdown:');
+    // Debug logging - guarded to avoid overhead in production
+    if (DEBUG_NEAT) {
+      console.groupCollapsed(`NEAT Generation ${String(this.generation)}`);
+      console.table({
+        generation: this.generation,
+        species: this.species.length,
+        population: this.population.length,
+        bestFitness: Math.floor(bestFitness),
+      });
+      console.log('Species Breakdown:');
+    }
+
+    // Build speciesData - needed for both logging and gameStateBridge
     const speciesData = this.species
       .sort((a, b) => b.averageFitness - a.averageFitness)
       .map((s) => {
@@ -385,16 +415,18 @@ export class NEATController {
       this.previousSpeciesStats.set(s.id, { fitness: s.avgFitness });
     });
 
-    console.table(
-      speciesData.map((s) => ({
-        Skin: s.name.toUpperCase(),
-        Members: s.members,
-        AvgFit: Math.floor(s.avgFitness),
-        Momentum: s.momentum,
-        Stagnant: s.stagnation,
-      })),
-    );
-    console.groupEnd();
+    if (DEBUG_NEAT) {
+      console.table(
+        speciesData.map((s) => ({
+          Skin: s.name.toUpperCase(),
+          Members: s.members,
+          AvgFit: Math.floor(s.avgFitness),
+          Momentum: s.momentum,
+          Stagnant: s.stagnation,
+        })),
+      );
+      console.groupEnd();
+    }
 
     const avgFitness =
       this.population.reduce((sum, g) => sum + g.fitness, 0) /
@@ -410,7 +442,7 @@ export class NEATController {
       generation: this.generation,
       speciesCount: this.species.length,
       population: this.population.length,
-      bestFitness: Math.max(...this.population.map((g) => g.fitness)),
+      bestFitness, // Use already calculated bestFitness
       avgFitness,
       avgComplexity,
       species: speciesData,
@@ -425,6 +457,36 @@ export class NEATController {
       ];
     }
     return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+
+  /**
+   * Tournament selection - picks the best from a random subset
+   * This provides selection pressure while maintaining diversity
+   */
+  private tournamentSelect(candidates: Genome[], tournamentSize = 3): Genome {
+    if (candidates.length === 0) {
+      return this.population[
+        Math.floor(Math.random() * this.population.length)
+      ];
+    }
+
+    if (candidates.length <= tournamentSize) {
+      // Return the best if pool is small
+      return candidates.reduce((best, curr) =>
+        curr.fitness > best.fitness ? curr : best,
+      );
+    }
+
+    // Pick random contestants and return the best
+    let best = candidates[Math.floor(Math.random() * candidates.length)];
+    for (let i = 1; i < tournamentSize; i++) {
+      const contestant =
+        candidates[Math.floor(Math.random() * candidates.length)];
+      if (contestant.fitness > best.fitness) {
+        best = contestant;
+      }
+    }
+    return best;
   }
 
   /**

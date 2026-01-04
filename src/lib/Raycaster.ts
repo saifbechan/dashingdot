@@ -34,6 +34,13 @@ const reusableRay = new Phaser.Geom.Line(0, 0, 0, 0);
 const reusableHitPoint = new Phaser.Math.Vector2();
 const intersectionPoints: Phaser.Geom.Point[] = [];
 
+// Pre-allocated hit result to avoid object creation in hot path
+const reusableHit: RaycastHit = {
+  point: reusableHitPoint,
+  distance: 0,
+  object: null as unknown as Phaser.GameObjects.GameObject,
+};
+
 /**
  * Cast a ray and find the closest intersection with any target.
  *
@@ -82,13 +89,11 @@ export function raycast(
 
       if (distance < closestDistance) {
         closestDistance = distance;
-        // Only allocate hit object when we find a closer hit
+        // Reuse pre-allocated hit object instead of creating new one
         reusableHitPoint.set(point.x, point.y);
-        closestHit = {
-          point: reusableHitPoint,
-          distance,
-          object: target.gameObject,
-        };
+        reusableHit.distance = distance;
+        reusableHit.object = target.gameObject;
+        closestHit = reusableHit;
       }
     }
   }

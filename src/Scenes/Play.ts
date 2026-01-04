@@ -5,7 +5,11 @@ import {
   ItemNames,
   PlatformNames,
 } from '@/lib/constants';
-import { buildRaycastTargets, type RaycastTarget } from '@/lib/Raycaster';
+import {
+  buildRaycastTargets,
+  updateRaycastTargets,
+  type RaycastTarget,
+} from '@/lib/Raycaster';
 import effectConfig from '@/lib/sprite-configs/effect-config.json';
 import projectileConfig from '@/lib/sprite-configs/projectile-config.json';
 
@@ -55,8 +59,9 @@ class Play extends Phaser.Scene {
     scrollFactor: number;
   }[] = [];
 
-  // Lightweight raycaster targets - rebuilt each frame
+  // Lightweight raycaster targets - cached and updated in-place when possible
   public raycastTargets: RaycastTarget[] = [];
+  private lastRaycastTargetCount = 0;
 
   constructor() {
     super('Play');
@@ -221,6 +226,7 @@ class Play extends Phaser.Scene {
     this.itemManager.update();
 
     // Build raycast targets from all active entities (lightweight raycaster)
+    // Only rebuild when entity count changes, otherwise update positions in-place
     const activePlatforms = this.platformManager
       .getGroup()
       .getChildren()
@@ -232,8 +238,18 @@ class Play extends Phaser.Scene {
       .getChildren()
       .filter((obj) => obj.active);
 
-    const allTargets = [...activePlatforms, ...activeMobs, ...activeItems];
-    this.raycastTargets = buildRaycastTargets(allTargets);
+    const totalTargetCount =
+      activePlatforms.length + activeMobs.length + activeItems.length;
+
+    if (totalTargetCount !== this.lastRaycastTargetCount) {
+      // Entity count changed - full rebuild
+      const allTargets = [...activePlatforms, ...activeMobs, ...activeItems];
+      this.raycastTargets = buildRaycastTargets(allTargets);
+      this.lastRaycastTargetCount = totalTargetCount;
+    } else {
+      // Same count - just update positions in-place (no allocation)
+      updateRaycastTargets(this.raycastTargets);
+    }
 
     // Only update transparency when necessary
     const playerCount = this.playerManager.countActive();

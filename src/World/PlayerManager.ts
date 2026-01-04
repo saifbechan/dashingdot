@@ -32,20 +32,21 @@ export default class PlayerManager extends Phaser.GameObjects.Group {
       targetSpecies: 8,
 
       // Species config
-      compatibilityThreshold: 1.5, // Start lower to split faster
-      compatibilityModifier: 0.3,
-      excessCoefficient: 1.5, // Structural changes now count more
-      disjointCoefficient: 1.5,
-      weightDifferenceCoefficient: 1.0, // Weights are now more distinct
-      stagnationLimit: 15,
+      compatibilityThreshold: 2.0, // Higher threshold = more genetic diversity within species
+      compatibilityModifier: 0.2, // Slower adjustment
+      excessCoefficient: 1.0, // Balance structure vs weights
+      disjointCoefficient: 1.0,
+      weightDifferenceCoefficient: 0.5, // Less sensitive to weight differences
+      stagnationLimit: 10, // Faster removal of stagnant species
 
-      // Evolution rates
-      survivalRate: 0.2,
+      // Evolution rates - increased diversity
+      survivalRate: 0.3, // Keep more parents for genetic diversity
+      interspeciesCrossoverRate: 0.05, // 5% chance to breed across species
       mutationRates: {
-        weight: 0.8, // More frequent weight shifts
-        node: 0.08, // 8% chance for new node
-        connection: 0.1, // 10% chance for new pipe
-        perturbWeight: 0.9,
+        weight: 0.8,
+        node: 0.05, // Slightly lower to let weights optimize first
+        connection: 0.08,
+        perturbWeight: 0.85, // More chance of complete weight reset
       },
     };
 

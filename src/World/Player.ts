@@ -2,7 +2,6 @@ import config from '@/lib/config';
 import { type PlayerNames, type ProjectileNames } from '@/lib/constants';
 import { raycast } from '@/lib/Raycaster';
 import Phaser from 'phaser';
-import { v4 as uuidv4 } from 'uuid';
 import { type Genome } from '../AI/NEAT';
 import { type PlaySceneType } from '../Scenes/Play';
 
@@ -33,6 +32,9 @@ export interface EvolveableType {
   speciesId: number;
   fitness: number;
 }
+
+// Fast incrementing counter for player IDs (faster than uuidv4)
+let playerIdCounter = 0;
 
 class Player extends Phaser.Physics.Arcade.Sprite {
   public readonly id: string;
@@ -78,7 +80,8 @@ class Player extends Phaser.Physics.Arcade.Sprite {
   ) {
     super(scene, x, y, name);
 
-    this.id = uuidv4();
+    // Use fast counter-based ID instead of slow cryptographic uuidv4()
+    this.id = `p${String(++playerIdCounter)}`;
     this.setName(name);
     this.projectileType = projectileType;
 

@@ -48,6 +48,16 @@ export class GenomePool {
   clear(): void {
     this.pool = [];
   }
+
+  /**
+   * Pre-populate the pool to avoid allocations during first generation
+   * Call this at game initialization for smoother performance
+   */
+  prewarm(config: GenomeConfig, count: number): void {
+    for (let i = 0; i < count; i++) {
+      this.pool.push(new Genome(config));
+    }
+  }
 }
 
 export const genomePool = GenomePool.getInstance();

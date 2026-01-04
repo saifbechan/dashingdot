@@ -61,12 +61,17 @@ export class Genome {
     null;
   private topologyDirty = true;
 
+  // Track next node ID for O(1) lookup instead of O(n) Math.max()
+  private _nextNodeId = 0;
+
   constructor(config: GenomeConfig) {
     this._config = config;
     // Pre-allocate max possible nodes: inputs + outputs + max hidden
     this.nodeValues = new Float32Array(
       config.inputCount + config.outputCount + config.maxHiddenNodes,
     );
+    // Initialize next node ID after input + output nodes
+    this._nextNodeId = config.inputCount + config.outputCount;
   }
 
   /**
@@ -219,10 +224,10 @@ export class Genome {
   }
 
   /**
-   * Get the next available node ID
+   * Get the next available node ID - O(1) using tracked counter
    */
   getNextNodeId(): number {
-    return Math.max(...this.nodes.map((n) => n.id)) + 1;
+    return this._nextNodeId++;
   }
 
   /**
@@ -244,6 +249,7 @@ export class Genome {
     this.fitness = 0;
     this.speciesId = 0;
     this.nodeValues.fill(0);
+    this._nextNodeId = this._config.inputCount + this._config.outputCount;
     this.markTopologyDirty();
   }
 
@@ -257,6 +263,8 @@ export class Genome {
     other.connections.forEach((c) => this.connections.push({ ...c }));
     this.fitness = other.fitness;
     this.speciesId = other.speciesId;
+    // Copy next node ID from source to maintain proper tracking
+    this._nextNodeId = other._nextNodeId;
   }
 
   /**
