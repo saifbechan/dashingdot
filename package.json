@@ -60,7 +60,7 @@
     "jest-environment-jsdom": "^30.2.0",
     "lint-staged": "^16.2.7",
     "phaser3spectorjs": "^0.0.8",
-    "prettier": "^3.7.4",
+    "prettier": "^3.8.0",
     "prettier-plugin-organize-imports": "^4.3.0",
     "prettier-plugin-sh": "^0.18.0",
     "prettier-plugin-tailwindcss": "^0.7.2",
